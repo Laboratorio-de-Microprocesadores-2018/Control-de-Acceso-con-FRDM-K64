@@ -50,6 +50,7 @@ enum {
  */
 void pinMode (uint8_t pin, uint8_t mode);
 
+
 /**
  * @brief Configures how the pin reacts when an IRQ event ocurrs
  * @param pin the pin whose IRQ mode you wish to set (according PORTNUM2PIN)

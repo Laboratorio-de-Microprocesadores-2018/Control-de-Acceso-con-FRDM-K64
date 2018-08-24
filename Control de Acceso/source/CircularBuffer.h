@@ -1,15 +1,16 @@
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+//               ITBA - Laboratorio de Microprocesadores - 2018
+//                                   Grupo 3
+//	CircularBuffer.h
+//
+//
+//	Source: https://embedjournal.com/implementing-circular-buffer-embedded-c/
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 #ifndef __CIRCULARBUFFER_H_
 #define __CIRCULARBUFFER_H_
 
 #include <stdbool.h>
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-//               ITBA - Laboratorio de Microprocesadores - 2018
-//                                   Grupo 3
-//
-//
-//
-// Source: https://embedjournal.com/implementing-circular-buffer-embedded-c/
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+
 typedef struct 
 {
 	char * const buffer;

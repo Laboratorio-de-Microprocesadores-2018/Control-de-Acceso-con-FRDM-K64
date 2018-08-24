@@ -5,21 +5,33 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../source/App.c \
+../source/CardReader.c \
 ../source/CircularBuffer.c \
-../source/SysTick.c \
-../source/gpio.c 
+../source/Display.c \
+../source/GPIO.c \
+../source/Keyboard.c \
+../source/Multiplexer.c \
+../source/SysTick.c 
 
 OBJS += \
 ./source/App.o \
+./source/CardReader.o \
 ./source/CircularBuffer.o \
-./source/SysTick.o \
-./source/gpio.o 
+./source/Display.o \
+./source/GPIO.o \
+./source/Keyboard.o \
+./source/Multiplexer.o \
+./source/SysTick.o 
 
 C_DEPS += \
 ./source/App.d \
+./source/CardReader.d \
 ./source/CircularBuffer.d \
-./source/SysTick.d \
-./source/gpio.d 
+./source/Display.d \
+./source/GPIO.d \
+./source/Keyboard.d \
+./source/Multiplexer.d \
+./source/SysTick.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

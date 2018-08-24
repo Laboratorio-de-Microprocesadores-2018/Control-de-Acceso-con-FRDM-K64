@@ -1,21 +1,25 @@
-/***************************************************************************//**
-  @file     App.c
-  @brief    Application functions
-  @author   Nicolás Magliola
- ******************************************************************************/
-
 /*******************************************************************************
  * INCLUDE HEADER FILES
  ******************************************************************************/
 
-#include "gpio.h"
+#include <GPIO.h>
+#include "Keyboard.h"
+#include "Display.h"
+#include "CardReader.h"
+#include "Multiplexer.h"
+#include "StateMachine.h"
 
+/*******************************************************************************
+ * Constants
+ ******************************************************************************/
+
+static const int MUX_FREQ = 100;
 
 /*******************************************************************************
  * FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS WITH FILE LEVEL SCOPE
  ******************************************************************************/
 
-static void delayLoop(uint32_t veces);
+static void Systick_Handler(void);
 
 
 /*******************************************************************************
@@ -24,17 +28,22 @@ static void delayLoop(uint32_t veces);
  *******************************************************************************
  ******************************************************************************/
 
-/* Función que se llama 1 vez, al comienzo del programa */
+//
 void App_Init (void)
 {
-	pinMode(PIN_LED_BLUE, OUTPUT);
+	// Init drivers
+	initKeyboard();
+	initDisplay();
+	initCardReader();
+	initMultiplexer(MUX_FREQ);
+	//initBuzzer();
 }
 
-/* Función que se llama constantemente en un ciclo infinito */
+// 
 void App_Run (void)
 {
-	delayLoop(4000000UL);
-	digitalToggle(PIN_LED_BLUE);
+	// Get events from keyboard and magnetic card
+	
 }
 
 
@@ -43,8 +52,7 @@ void App_Run (void)
                         LOCAL FUNCTION DEFINITIONS
  *******************************************************************************
  ******************************************************************************/
-
-static void delayLoop(uint32_t veces)
+void Systick_Handler()
 {
-	while (veces--);
+	multiplexerPISR();
 }
