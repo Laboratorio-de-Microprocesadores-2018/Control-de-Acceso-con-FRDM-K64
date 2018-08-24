@@ -3,6 +3,7 @@
  ******************************************************************************/
 
 #include <GPIO.h>
+#include "SysTick.h"
 #include "Keyboard.h"
 #include "Display.h"
 #include "CardReader.h"
@@ -13,7 +14,7 @@
  * Constants
  ******************************************************************************/
 
-static const int MUX_FREQ = 100;
+static const int MUX_PERIOD_MS = 10;
 
 /*******************************************************************************
  * FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS WITH FILE LEVEL SCOPE
@@ -35,7 +36,8 @@ void App_Init (void)
 	initKeyboard();
 	initDisplay();
 	initCardReader();
-	initMultiplexer(MUX_FREQ);
+	initMultiplexer(MUX_PERIOD_MS);
+	initSysTick(MUX_PERIOD_MS/1000.0);
 	//initBuzzer();
 }
 

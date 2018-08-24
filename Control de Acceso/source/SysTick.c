@@ -1,9 +1,9 @@
 #include "SysTick.h"
 
 
-uint32_t SysTick_Init (float time)
+uint32_t SysTick_Init (int period)
 {
-	uint32_t ticks = time*__CORE_CLOCK__;
+	uint32_t ticks = period/1000.0*__CORE_CLOCK__;
 
 	if ((ticks - 1UL) > SysTick_LOAD_RELOAD_Msk)
 	    return (0UL);

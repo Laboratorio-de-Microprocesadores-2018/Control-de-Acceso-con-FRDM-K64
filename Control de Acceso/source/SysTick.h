@@ -33,10 +33,10 @@
 
 /**
  * @brief Initialize SysTic driver
- * @param time Time period between calls
+ * @param period Period between calls in MILLISECONDS
  * @return Function registered OK
  */
-uint32_t SysTick_Init (float time);
+uint32_t SysTick_Init(int period);
 
 
 /*******************************************************************************
