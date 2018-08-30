@@ -12,33 +12,26 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef int KbEvtType;
-static const KbEvtType KB_KEY_UP = 0;
-static const KbEvtType KB_KEY_DOWN = 1;
+typedef enum{KB_KEY_UP,KB_KEY_DOWN,KB_NO_EVT}KeyboardbEventType;
 
-typedef struct{
-	char c;
+typedef struct
+{
+	KeyboardbEventType type;
+	char charCode;
 	int row;
 	int col;
-	KbEvtType type;
-}KbEvt;
-
+}KeyboardEvent;
 
 // Keyboard initialization
-void initKeyboard(void);
-
-// Interrupt subroutine called when a button is pressed
-void keyboardISR(void);
-
-// Interrupt subroutine called to multiplex the keyboard
-void keyboardPISR(void);
+void initKeyboard();
 
 // Services
-bool kbhit(void);
-char getchar(void);
-void kbClear(void);
-char kbPeek(void);
-uint8_t kbCount(void);
+KeyboardEvent getKeyboardEvent();
+char getchar();
+bool keyboardHit();
+void keyboardFlush();
+uint8_t keyboardCount();
+
 
 
 

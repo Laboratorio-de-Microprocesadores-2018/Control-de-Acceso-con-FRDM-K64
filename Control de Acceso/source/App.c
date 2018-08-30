@@ -31,11 +31,10 @@ static void Systick_Handler(void);
 //
 void App_Init (void)
 {
-	// Init drivers
+	initMultiplexer();
 	initKeyboard();
 	initDisplay();
 	initCardReader();
-	initMultiplexer(MUX_FREQ);
 	//initBuzzer();
 }
 

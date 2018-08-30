@@ -10,26 +10,25 @@
             .maxlen = size               \
         }                                \
 
-
-bool push(CircularBuffer *this,char data)
+bool push(CircularBuffer *this,void* data)
 {
-    int next;
+   /* int next;
     // Next is head position after push operation
     next = this->head + 1; 
     if (next >= this->maxlen)
         next = 0;
-    // Full buffer contition: head+1==tail
+    // Full buffer condition: head+1==tail
     if (next == this->tail) 
         return false;
     // Save data and update head position
     this->buffer[this->head] = data; 
-    this->head = next;
+    this->head = next;*/
     return true;
 }
 
-bool pop(CircularBuffer *this,char * data)
+bool pop(CircularBuffer *this,void * data)
 {
-	int next;
+	/*int next;
 	// Empty buffer condition head==tail
     if (this->head == this->tail)
         return false;
@@ -39,8 +38,18 @@ bool pop(CircularBuffer *this,char * data)
         next = 0;
     // Read data and update tail position
     (*data) = this->buffer[this->tail]; 
-    this->tail = next;
+    this->tail = next;*/
     return true;
+}
+
+void flush(CircularBuffer * this)
+{
+	this->head = this->tail;
+}
+
+int numel(CircularBuffer *this)
+{
+	return 0; // IMPLEMENTAR
 }
 
 bool isEmpty(CircularBuffer *this)

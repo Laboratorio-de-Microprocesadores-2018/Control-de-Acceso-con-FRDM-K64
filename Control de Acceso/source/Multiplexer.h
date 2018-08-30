@@ -10,14 +10,13 @@
 #ifndef MULTIPLEXER_H_
 #define MULTIPLEXER_H_
 
+// Multiplexation frecuency
+#define MUX_FRECUENCY 100
 
 // Multiplexer initialization
-void initMultiplexer(int freq);
-
-// Interrupt subroutine called to switch multiplexer
-void multiplexerPISR(void);
+void initMultiplexer();
 
 // Returns the active pin in the multiplexer
-int getActivePin(void);
+int getActivePin();
 
 #endif /* MULTIPLEXER_H_ */
