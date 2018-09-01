@@ -111,5 +111,3 @@ bool isEmpty(CircularBuffer *this);
  */
 bool isFull(CircularBuffer *this);
 
-#endif // __CIRCULARBUFFER_H_
-
