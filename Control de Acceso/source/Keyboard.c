@@ -1,27 +1,31 @@
+/////////////////////////////////////////////////////////////////////////////////
+//                             Included header files                           //
+/////////////////////////////////////////////////////////////////////////////////
 #include "Keyboard.h"
 #include "GPIO.h"
 #include "Systick.h"
 #include "Multiplexer.h"
 #include "CircularBuffer.h"
 
-// Keyboard size
+/////////////////////////////////////////////////////////////////////////////////
+//                       Constants and macro definitions                       //
+/////////////////////////////////////////////////////////////////////////////////
+
 #define NCOLS 3U
 #define NROWS 4U
-// Define pins
+
 #define COL0 PORTNUM2PIN(PB, 19)
 #define COL1 PORTNUM2PIN(PC, 17)
 #define COL2 PORTNUM2PIN(PB, 18)
-// Define active high/low keys
+
 #define PRESSED 1
 #define UNPRESSED 0
 
 #define BUFFER_SIZE 5
 
-
-// Interrupt subroutine called to multiplex the keyboard
-static void keyboardPISR(void);
-
-
+/////////////////////////////////////////////////////////////////////////////////
+//                   Local variable definitions ('static')                     //
+/////////////////////////////////////////////////////////////////////////////////
 static int COLS[] = {COL0,COL1,COL2};
 static int kbStatus[NROWS][NCOLS];
 static char kbChars[NROWS][NCOLS] = {{'1','2','3'},
@@ -31,6 +35,16 @@ static char kbChars[NROWS][NCOLS] = {{'1','2','3'},
 
 NEW_CIRCULAR_BUFFER(buffer,BUFFER_SIZE,sizeof(KeyboardEvent));
 
+/////////////////////////////////////////////////////////////////////////////////
+//                   Local function prototypes ('static')                      //
+/////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Interrupt subroutine called to multiplex the keyboard
+ */
+static void keyboardPISR(void);
+
+/////////////////////////////////////////////////////////////////////////////////
 
 void initKeyboard(void)
 {

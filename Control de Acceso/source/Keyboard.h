@@ -1,14 +1,28 @@
-/***************************************************************************//**
-  @file     Keyboard.h
-  @brief    Numerical matrix keyboard driver
-  @author   Grupo 3 - Laboratorio de Microprocesadores - 2018
- ******************************************************************************/
+/////////////////////////////////////////////////////////////////////////////////
+//                              CONTROL DE ACCESO                              //
+//          Grupo 3 - Laboratorio de Microprocesadores - ITBA - 2018           //
+//	                                                                           //
+/////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @file     Keyboard.h
+ * @brief    Numerical matrix keyboard driver
+ * @author   Tobías Lifschitz
+ */
 
 #ifndef KEYBOARD_H_
 #define KEYBOARD_H_
 
+/////////////////////////////////////////////////////////////////////////////////
+//                             Included header files                           //
+/////////////////////////////////////////////////////////////////////////////////
+
 #include <stdint.h>
 #include <stdbool.h>
+
+/////////////////////////////////////////////////////////////////////////////////
+//                    Enumerations, structures and typedefs                    //
+/////////////////////////////////////////////////////////////////////////////////
 
 typedef enum{KB_KEY_UP,KB_KEY_DOWN,KB_NO_EVT}KeyboardEventType;
 
@@ -19,6 +33,10 @@ typedef struct
 	int row;
 	int col;
 }KeyboardEvent;
+
+/////////////////////////////////////////////////////////////////////////////////
+//                         Global function prototypes                          //
+/////////////////////////////////////////////////////////////////////////////////
 
 // Keyboard initialization
 void initKeyboard();
@@ -33,4 +51,5 @@ uint8_t keyboardCount();
 
 
 
+/////////////////////////////////////////////////////////////////////////////////
 #endif /* KEYBOARD_H_ */

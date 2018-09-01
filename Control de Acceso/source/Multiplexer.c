@@ -1,23 +1,34 @@
+/////////////////////////////////////////////////////////////////////////////////
+//                             Included header files                           //
+/////////////////////////////////////////////////////////////////////////////////
 #include "Multiplexer.h"
 #include "GPIO.h"
 #include "SysTick.h"
 
-// Number of pins
-static const int N = 4;
-// Pins being multiplexed
-static const int pins[] = {PORTNUM2PIN(PC,8),PORTNUM2PIN(PA,1),PORTNUM2PIN(PC,1),PORTNUM2PIN(PB,9)};
-// Define active high/low pins
-static const int ON = 0;
-static const int OFF = 1;
 
-//////////////////////////   Static variables
+/////////////////////////////////////////////////////////////////////////////////
+//                   Local variable definitions ('static')                     //
+/////////////////////////////////////////////////////////////////////////////////
+
+static const int N = 4; // Number of pins
+static const int pins[] = { PORTNUM2PIN(PC,8), /* Pins being multiplexed */
+							PORTNUM2PIN(PA,1),
+							PORTNUM2PIN(PC,1),
+							PORTNUM2PIN(PB,9)
+						   };
+static const int ON = 0; // Define active high/low pins
+static const int OFF = 1;
 static int activePin;
 
-//                Funciones estaticas
-// Interrupt subroutine called to advance multiplexer
+/////////////////////////////////////////////////////////////////////////////////
+//                   Local function prototypes ('static')                      //
+/////////////////////////////////////////////////////////////////////////////////
 static void multiplexerPISR(void);
 
-// Multiplexer initialization
+/////////////////////////////////////////////////////////////////////////////////
+//                         Global functions definition                         //
+/////////////////////////////////////////////////////////////////////////////////
+
 void initMultiplexer()
 {
 	// Set all pins as outputs
@@ -35,7 +46,7 @@ void initMultiplexer()
 }
 
 // Interrupt subroutine called to switch multiplexer
-void multiplexerPISR(void)
+static void multiplexerPISR(void)
 {	digitalToggle(PIN_LED_BLUE);
 	digitalToggle(pins[activePin]);
 	activePin = (activePin+1)%N;
