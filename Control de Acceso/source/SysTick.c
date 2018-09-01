@@ -1,5 +1,5 @@
+#include <Board.h>
 #include "SysTick.h"
-#include "board.h"
 // Structure to store SysTick callbacks
 typedef struct{
 	SysTickFnc f;        // Function pointer
