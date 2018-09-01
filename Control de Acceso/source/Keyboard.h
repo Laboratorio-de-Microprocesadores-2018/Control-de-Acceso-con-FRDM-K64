@@ -1,22 +1,20 @@
-/* ____________________________________________________________________________
-  /\               ITBA - Laboratorio de Microprocesadores - 2018              \
-  \_|                                 Grupo 3                                  |  
-    |	Keyboard.h                                                             |
-    |                                                                          |  
-    |  ________________________________________________________________________|_ 
-    \_/_________________________________________________________________________/
-*/
+/***************************************************************************//**
+  @file     Keyboard.h
+  @brief    Numerical matrix keyboard driver
+  @author   Grupo 3 - Laboratorio de Microprocesadores - 2018
+ ******************************************************************************/
+
 #ifndef KEYBOARD_H_
 #define KEYBOARD_H_
 
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef enum{KB_KEY_UP,KB_KEY_DOWN,KB_NO_EVT}KeyboardbEventType;
+typedef enum{KB_KEY_UP,KB_KEY_DOWN,KB_NO_EVT}KeyboardEventType;
 
 typedef struct
 {
-	KeyboardbEventType type;
+	KeyboardEventType type;
 	char charCode;
 	int row;
 	int col;
@@ -27,7 +25,7 @@ void initKeyboard();
 
 // Services
 KeyboardEvent getKeyboardEvent();
-char getchar();
+//char getchar();
 bool keyboardHit();
 void keyboardFlush();
 uint8_t keyboardCount();

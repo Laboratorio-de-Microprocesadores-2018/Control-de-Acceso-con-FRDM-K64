@@ -1,22 +1,24 @@
-/* ____________________________________________________________________________
-  /\               ITBA - Laboratorio de Microprocesadores - 2018              \  
-  \_|                                 Grupo 3                                  |  
-    |	Multiplexer.h                                                           |  
-    |                                                                          |  
-    |  ________________________________________________________________________|_ 
-    \_/_________________________________________________________________________/
-*/
+/***************************************************************************//**
+  @file     Multiplexer.h
+  @brief    Multiplexation abstraction for keyboard and display independence.
+  @author   Grupo 3 - Laboratorio de Microprocesadores - 2018
+ ******************************************************************************/
 
 #ifndef MULTIPLEXER_H_
 #define MULTIPLEXER_H_
 
 // Multiplexation frecuency
-#define MUX_FRECUENCY 100
+#define MUX_FREQUENCY 100
 
-// Multiplexer initialization
+/**
+ * @brief Init the multiplexer
+ */
 void initMultiplexer();
 
-// Returns the active pin in the multiplexer
+/**
+ * @brief Check the active pin in the multiplexer.
+ * @return The active pin number between 0 and 3.
+ */
 int getActivePin();
 
 #endif /* MULTIPLEXER_H_ */

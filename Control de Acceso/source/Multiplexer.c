@@ -5,10 +5,10 @@
 // Number of pins
 static const int N = 4;
 // Pins being multiplexed
-static const int pins[] = {PORTNUM2PIN(PB, 0),PORTNUM2PIN(PB, 1),PORTNUM2PIN(PB, 2),PORTNUM2PIN(PB, 3)};
+static const int pins[] = {PORTNUM2PIN(PC,8),PORTNUM2PIN(PA,1),PORTNUM2PIN(PC,1),PORTNUM2PIN(PB,9)};
 // Define active high/low pins
-#define ON 0
-#define OFF 1
+static const int ON = 0;
+static const int OFF = 1;
 
 //////////////////////////   Static variables
 static int activePin;
@@ -31,12 +31,12 @@ void initMultiplexer()
 	activePin=0;
 
 	// Register the periodic callback
-	sysTickAddCallback(&multiplexerPISR(),(float)(1/MUX_FREQUENCY));
+	sysTickAddCallback(&multiplexerPISR,(1/(float)MUX_FREQUENCY));
 }
 
 // Interrupt subroutine called to switch multiplexer
 void multiplexerPISR(void)
-{
+{	digitalToggle(PIN_LED_BLUE);
 	digitalToggle(pins[activePin]);
 	activePin = (activePin+1)%N;
 	digitalToggle(pins[activePin]);
@@ -44,6 +44,5 @@ void multiplexerPISR(void)
 
 int getActivePin(void)
 {
-	// ES MEJOR ESTO O LEER EL PUERTO EN ESTE INSTANTE{ñ?????????
 	return activePin;
 }

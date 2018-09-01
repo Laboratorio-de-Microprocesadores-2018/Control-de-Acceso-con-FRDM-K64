@@ -17,6 +17,7 @@ void pinMode (uint8_t pin, uint8_t mode)
 	static GPIO_Type * const gpio[] = GPIO_BASE_PTRS;
 
 	// Configurar el pin como GPIO
+	ports[i]->PCR[n] &= ~PORT_PCR_MUX_MASK;
 	ports[i]->PCR[n] |= PORT_PCR_MUX(1);
 
 	switch(mode)
@@ -80,10 +81,10 @@ void digitalToggle (uint8_t pin)
  */
 uint8_t digitalRead (uint8_t pin)
 {
-	assert(pin >= 6*32);
+	//assert(pin >= 6*32);
 
 	uint8_t i = pin/32; // Numero del puerto (A,B,C,D,E)
 	uint8_t n = pin%32; // Numero del pin [0:31]
 	static GPIO_Type * const gpio[] = GPIO_BASE_PTRS;
-	return gpio[i]->PDIR & ~(1<<n);
+	return ((gpio[i]->PDIR>>n) & 1UL);
 }

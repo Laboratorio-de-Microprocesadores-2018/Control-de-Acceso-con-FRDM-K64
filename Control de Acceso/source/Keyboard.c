@@ -2,18 +2,18 @@
 #include "GPIO.h"
 #include "Systick.h"
 #include "Multiplexer.h"
-#include "CircularBuffer.c"
+#include "CircularBuffer.h"
 
 // Keyboard size
 #define NCOLS 3U
 #define NROWS 4U
 // Define pins
-#define COL0 PORTNUM2PIN(PB, 4)
-#define COL1 PORTNUM2PIN(PB, 5)
-#define COL2 PORTNUM2PIN(PB, 6)
+#define COL0 PORTNUM2PIN(PB, 19)
+#define COL1 PORTNUM2PIN(PC, 17)
+#define COL2 PORTNUM2PIN(PB, 18)
 // Define active high/low keys
-#define PRESSED 0U
-#define UNPRESSED 1U
+#define PRESSED 1
+#define UNPRESSED 0
 
 #define BUFFER_SIZE 5
 
@@ -29,20 +29,20 @@ static char kbChars[NROWS][NCOLS] = {{'1','2','3'},
 									 {'7','8','9'},
 									 {'*','0','#'}};
 
-CIRCULAR_BUFFER_NEW(buffer,5);
+NEW_CIRCULAR_BUFFER(buffer,BUFFER_SIZE,sizeof(KeyboardEvent));
 
 
 void initKeyboard(void)
 {
 	// Set inputs
 	for(int i=0; i<NCOLS; i++)
-		pinMode(COLS[i],INPUT);
+		pinMode(COLS[i],INPUT_PULLDOWN);
 	// Set all keys unpressed
 	for(int r=0; r<NROWS; r++)
 		for(int c=0; c<NCOLS; c++)
 			kbStatus[r][c]=UNPRESSED;
 
-	sysTickAddCallback(&keyboardPISR,(float)(1/MUX_FREQUENCY));
+	sysTickAddCallback(&keyboardPISR,(float)(1/(float)MUX_FREQUENCY));
 }
 
 
@@ -76,7 +76,7 @@ KeyboardEvent getKeyboardEvent()
 {
 	KeyboardEvent ev;
 	if(pop(&buffer,&ev)==false)
-		ev.type=KB_NOW_EVT;
+		ev.type=KB_NO_EVT;
 	return ev;
 }
 

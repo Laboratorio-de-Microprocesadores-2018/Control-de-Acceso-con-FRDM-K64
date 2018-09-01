@@ -1,5 +1,5 @@
 #include "SysTick.h"
-
+#include "board.h"
 // Structure to store SysTick callbacks
 typedef struct{
 	SysTickFnc f;        // Function pointer
@@ -11,7 +11,7 @@ typedef struct{
 static SysTickCallback callbacks[SYSTICK_MAX_CALLBACKS];
 static int callbacksSize;
 
-uint32_t sysTickInit ()
+uint32_t sysTickInit()
 {
 	uint32_t ticks = SYSTICK_ISR_PERIOD_S*__CORE_CLOCK__;
 
@@ -31,8 +31,8 @@ bool sysTickAddCallback(SysTickFnc fnc,float period)
 	if(callbacksSize < SYSTICK_MAX_CALLBACKS)
 	{
 		callbacks[callbacksSize].f = fnc;
-		callbacks[callbacksSize].resetValue = period/SYSTICK_ISR_PERIOD_S;
-		callbacks[callbacksSize].count = period/SYSTICK_ISR_PERIOD_S;
+		callbacks[callbacksSize].resetValue = (uint32_t)(period/SYSTICK_ISR_PERIOD_S+0.5);
+		callbacks[callbacksSize].count = callbacks[callbacksSize].resetValue;
 		callbacksSize++;
 		return true;
 	}
@@ -56,6 +56,7 @@ bool sysTickAddDelayCall(SysTickFnc fnc,float time)
 
 __ISR__ SysTick_Handler(void)
 {
+
 	// Iterate all registered functions
 	for(int i=0;i<callbacksSize;i++)
 	{
@@ -79,4 +80,5 @@ __ISR__ SysTick_Handler(void)
 			}
 		}
 	}
+
 }

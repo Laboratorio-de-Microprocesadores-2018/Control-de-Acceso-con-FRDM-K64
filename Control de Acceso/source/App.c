@@ -7,19 +7,15 @@
 #include "Display.h"
 #include "CardReader.h"
 #include "Multiplexer.h"
-#include "StateMachine.h"
+#include "SysTick.h"
 
 /*******************************************************************************
  * Constants
  ******************************************************************************/
 
-static const int MUX_FREQ = 100;
-
 /*******************************************************************************
  * FUNCTION PROTOTYPES FOR PRIVATE FUNCTIONS WITH FILE LEVEL SCOPE
  ******************************************************************************/
-
-static void Systick_Handler(void);
 
 
 /*******************************************************************************
@@ -33,16 +29,32 @@ void App_Init (void)
 {
 	initMultiplexer();
 	initKeyboard();
-	initDisplay();
-	initCardReader();
+	sysTickInit();
+	pinMode(PIN_LED_BLUE,OUTPUT);
+	digitalWrite(PIN_LED_BLUE,HIGH);
+	//initDisplay();
+	//initCardReader();
 	//initBuzzer();
 }
 
 // 
+static char input[12];
+int i;
 void App_Run (void)
 {
-	// Get events from keyboard and magnetic card
-	
+	KeyboardEvent ev = getKeyboardEvent();
+	if(ev.type==KB_KEY_DOWN)
+	{
+		char c= ev.charCode;
+		/*
+		if(isnum(c))
+			putchar(c)
+		else if (c=='*')
+			erase();
+		else if (c=='#')
+			clearDisplay();
+	    */
+	}
 }
 
 
@@ -51,7 +63,3 @@ void App_Run (void)
                         LOCAL FUNCTION DEFINITIONS
  *******************************************************************************
  ******************************************************************************/
-void Systick_Handler()
-{
-	multiplexerPISR();
-}

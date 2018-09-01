@@ -32,7 +32,7 @@ typedef void(*SysTickFnc)(void);
  * @brief Init systick driver
  * @return Init succeed
  */
-uint32_t sysTickInit ();
+uint32_t sysTickInit();
 /**
  * @brief Register a periodic call to a function.
  * @param period Period of the function call.
