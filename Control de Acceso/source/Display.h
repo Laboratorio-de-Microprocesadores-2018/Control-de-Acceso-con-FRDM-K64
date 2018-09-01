@@ -12,12 +12,12 @@
 
 // Display initialization
 void initDisplay(void);
-// Interrupt subroutine called to multiplex the display
-void displayPISR(void);
+
 
 // Services
 void putchar(char c);
-void dispClear();
+void erase(void);
+void dispClear(void);
 void showCursor();
 void blinkCursor();
 void moveCursorLeft();
