@@ -16,8 +16,8 @@
 
 
 // Pins being multiplexed
-static const int pins[] = {PORTNUM2PIN(PC,5),PORTNUM2PIN(PC,3),PORTNUM2PIN(PC,7),PORTNUM2PIN(PC,2), PORTNUM2PIN(PC,0), PORTNUM2PIN(PA,2), PORTNUM2PIN(PC,9)};
-static const int dotPin = PORTNUM2PIN(PB,23);
+static const int pins[] = {PORTNUM2PIN(PC,2),PORTNUM2PIN(PC,0),PORTNUM2PIN(PA,2),PORTNUM2PIN(PC,5), PORTNUM2PIN(PC,3), PORTNUM2PIN(PC,7), PORTNUM2PIN(PB,23)};
+static const int dotPin = PORTNUM2PIN(PC,9);
 static const uint8_t numCode[] = {0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x67};
 static char data[DATA_LENGTH];
 static int muxActivePin;

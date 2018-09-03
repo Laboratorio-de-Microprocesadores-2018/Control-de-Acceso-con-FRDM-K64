@@ -47,7 +47,7 @@ void initMultiplexer()
 
 // Interrupt subroutine called to switch multiplexer
 static void multiplexerPISR(void)
-{	digitalToggle(PIN_LED_BLUE);
+{
 	digitalToggle(pins[activePin]);
 	activePin = (activePin+1)%N;
 	digitalToggle(pins[activePin]);
