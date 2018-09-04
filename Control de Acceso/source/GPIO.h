@@ -27,7 +27,7 @@
 /////////////////////////////////////////////////////////////////////////////////
 
 typedef void (*pinIrqFun_t)(void);
-
+/*
 enum {
     GPIO_IRQ_MODE_DISABLE,
     GPIO_IRQ_MODE_RISING_EDGE,
@@ -35,7 +35,22 @@ enum {
     GPIO_IRQ_MODE_BOTH_EDGES,
 
     GPIO_IRQ_CANT_MODES
+};*/
+
+enum
+{
+	IRQC_DISABLE				= 0x00,
+	IRQC_DMA_RISING				= 0x01,
+	IRQC_DMA_FALLING			= 0x02,
+	IRQC_DMA_EITHER				= 0x03,
+	IRQC_INTERRUPT_L0			= 0x08,
+	IRQC_INTERRUPT_RISING		= 0x09,
+	IRQC_INTERRUPT_FALLING		= 0x0A,
+	IRQC_INTERRUPT_EITHER		= 0x0B,
+	IRQC_INTERRUPT_L1			= 0x0C,
 };
+
+
 
 /////////////////////////////////////////////////////////////////////////////////
 //                         Global function prototypes                          //

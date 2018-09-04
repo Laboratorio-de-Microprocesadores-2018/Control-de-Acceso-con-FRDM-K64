@@ -9,6 +9,8 @@
 #ifndef CARDREADER_H_
 #define CARDREADER_H_
 
+#include <stdint.h>
+
 // Magnetic card reader initialization
 void initCardReader(void);
 
@@ -20,5 +22,7 @@ void magneticCardPISR(void);
 
 // Services
 _Bool cardInserted(void);
+_Bool isDataReady(void);
+_Bool getData(uint8_t* data);
 
 #endif /* CARDREADER_H_ */
