@@ -30,10 +30,15 @@ enum { PA, PB, PC, PD, PE };
 #define LOW     0
 #define HIGH    1
 
+#define false    0
+#define true    1
+
+#define NULL 0
+
 // On Board User LEDs
-#define PIN_LED_RED     PORTNUM2PIN()
-#define PIN_LED_GREEN   PORTNUM2PIN()
-#define PIN_LED_BLUE    PORTNUM2PIN(PB,21) // PTB21
+#define PIN_LED_RED     PORTNUM2PIN(PB, 22)
+#define PIN_LED_GREEN   PORTNUM2PIN(PE, 26)
+#define PIN_LED_BLUE    PORTNUM2PIN(PB, 21) // PTB21
 
 #define LED_ACTIVE      LOW
 

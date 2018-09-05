@@ -120,7 +120,7 @@ uint8_t digitalRead (uint8_t pin)
 	uint8_t i = pin/32; // Numero del puerto (A,B,C,D,E)
 	uint8_t n = pin%32; // Numero del pin [0:31]
 	static GPIO_Type * const gpio[] = GPIO_BASE_PTRS;
-	return gpio[i]->PDIR & ~(1<<n);
+	return ((gpio[i]->PDIR>>n) & 1);
 }
 
 /**
@@ -199,7 +199,7 @@ void PORTA_IRQHandler(void)
 			if( (ports[PA]->PCR[pin]&PORT_PCR_ISF_MASK) == PORT_PCR_ISF_MASK)//checks every pins' ISF
 			{
 				portAIRQs[pin]();//callback
-				ports[PA]->PCR[pin]&= ~PORT_PCR_ISF(1);//Sets to 0 the interrupt status flag
+				ports[PA]->PCR[pin] |= PORT_PCR_ISF(1);//Sets to 0 the interrupt status flag
 			}
 		}
 	}
@@ -216,7 +216,7 @@ void PORTB_IRQHandler(void)
 			if( (ports[PB]->PCR[pin]&PORT_PCR_ISF_MASK) == PORT_PCR_ISF_MASK)
 			{
 				portBIRQs[pin]();
-				ports[PB]->PCR[pin]&= ~PORT_PCR_ISF(1);//Sets to 0 the interrupt status flag
+				ports[PB]->PCR[pin] |= PORT_PCR_ISF(1);//Sets to 0 the interrupt status flag
 			}
 		}
 	}
@@ -232,7 +232,7 @@ void PORTC_IRQHandler(void)
 			if( (ports[PC]->PCR[pin]&PORT_PCR_ISF_MASK) == PORT_PCR_ISF_MASK)
 			{
 				portCIRQs[pin]();
-				ports[PC]->PCR[pin]&= ~PORT_PCR_ISF(1);//Sets to 0 the interrupt status flag
+				ports[PC]->PCR[pin] |= PORT_PCR_ISF(1);//Sets to 0 the interrupt status flag
 			}
 		}
 	}
@@ -248,7 +248,7 @@ void PORTD_IRQHandler(void)
 			if( (ports[PD]->PCR[pin]&PORT_PCR_ISF_MASK) == PORT_PCR_ISF_MASK)
 			{
 				portDIRQs[pin]();
-				ports[PD]->PCR[pin]&= ~PORT_PCR_ISF(1);//Sets to 0 the interrupt status flag
+				ports[PD]->PCR[pin] |= PORT_PCR_ISF(1); //Sets to 0 the interrupt status flag by setting a 1
 			}
 		}
 	}
@@ -264,7 +264,7 @@ void PORTE_IRQHandler(void)
 			if( (ports[PE]->PCR[pin]&PORT_PCR_ISF_MASK) == PORT_PCR_ISF_MASK)
 			{
 				portEIRQs[pin]();
-				ports[PE]->PCR[pin]&= ~PORT_PCR_ISF(1);//Sets to 0 the interrupt status flag
+				ports[PE]->PCR[pin] |= PORT_PCR_ISF(1);//Sets to 0 the interrupt status flag
 			}
 		}
 	}
