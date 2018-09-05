@@ -55,6 +55,14 @@ bool sysTickAddCallback(SysTickFnc fnc,float period);
  * @return Register succeed. If false, max. number of callbacks reached.
  */
 bool sysTickAddDelayCall(SysTickFnc fnc,float time);
+
+/**
+ * @brief Return the number of milliseconds since the program execution started.
+ * @return Time in milliseconds.
+ */
+uint64_t millis();
+
+
 //*******************************************************************************
 
 /////////////////////////////////////////////////////////////////////////////////

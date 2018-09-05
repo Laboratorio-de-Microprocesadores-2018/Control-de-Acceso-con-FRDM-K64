@@ -11,6 +11,19 @@ typedef struct{
 static SysTickCallback callbacks[SYSTICK_MAX_CALLBACKS];
 static int callbacksSize;
 
+static uint64_t _millisCount;
+
+static void millisCount()
+{
+	_millisCount++;
+}
+
+uint64_t millis()
+{
+	return _millisCount;
+}
+
+
 uint32_t sysTickInit()
 {
 	uint32_t ticks = SYSTICK_ISR_PERIOD_S*__CORE_CLOCK__;
@@ -22,6 +35,8 @@ uint32_t sysTickInit()
 	SysTick->LOAD = ticks -1;
 	SysTick->VAL  = 0UL;
 	SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk|SysTick_CTRL_TICKINT_Msk|SysTick_CTRL_ENABLE_Msk;
+
+	sysTickAddCallback(&millisCount,1*MS2S);
 	return (1UL);
 }
 
