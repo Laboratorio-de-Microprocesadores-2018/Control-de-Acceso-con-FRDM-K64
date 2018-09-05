@@ -18,6 +18,9 @@ void initDisplay(void);
 void putchar(char c);
 void erase(void);
 void dispClear(void);
+void brightUp(void);
+void brightDown(void);
+
 void showCursor();
 void blinkCursor();
 void moveCursorLeft();
