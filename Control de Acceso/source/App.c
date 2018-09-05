@@ -15,6 +15,8 @@
 #include "Display.h"
 #include "CardReader.h"
 
+
+#include <ctype.h>
 void App_Init (void)
 {
 	initMultiplexer();
@@ -22,35 +24,27 @@ void App_Init (void)
 	sysTickInit();
 	pinMode(PIN_LED_BLUE,OUTPUT);
 	digitalWrite(PIN_LED_BLUE,HIGH);
-	//initDisplay();
+	initDisplay();
 	//initCardReader();
 	//initBuzzer();
 }
 
 void App_Run (void)
 {
-	static char arr[100];
-	int i=0;
+
 	while(1)
 	{
 		KeyboardEvent ev = getKeyboardEvent();
 		if(ev.type==KB_KEY_DOWN)
 		{
-			if(ev.charCode=='*')
-				break;
-			else
-			{
-				arr[i] = ev.charCode;
-				i++;
-			}
-			/*
-			if(isnum(c))
-				putchar(c)
-			else if (c=='*')
+			char c = ev.charCode;
+			if(c=='*')
 				erase();
-			else if (c=='#')
-				clearDisplay();
-			*/
+			else if(c=='#')
+				dispClear();
+			else
+				putchar(c);
+
 		}
 	}
 	while(1);

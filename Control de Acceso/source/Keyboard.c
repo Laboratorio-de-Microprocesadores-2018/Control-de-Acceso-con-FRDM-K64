@@ -128,33 +128,6 @@ uint8_t keyboardCount()
 	return numel(&buffer);
 }
 
-/*
-		uint8_t currStatus = digitalRead(COLS[c]);
-		if(currStatus != kbStatus[r][c])
-		{
-			KeyboardEvent ev = {.charCode = kbChars[r][c],
-						.row=r ,
-						.col=c};
-
-			if(currStatus==PRESSED)
-				ev.type=KB_KEY_DOWN;
-			else
-				ev.type=KB_KEY_UP;
-
-			push(&buffer,&ev);
-			kbStatus[r][c] = currStatus;
-
-
-
-			KB_KEY_UP,
-				KB_KEY_DOWN,
-				KB_KEY_LONG_PRESS,
-				KB_KEY_SINGLE_PRESS,
-				KB_KEY_MULTI_PRESS,
-				KB_NO_EVT}
-
-
-				*/
 static void updateKey(Key* key)
 {
 	static KeyboardEvent ev;
