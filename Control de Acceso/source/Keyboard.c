@@ -165,7 +165,7 @@ static void updateKey(Key* key)
 	}
 
     // If the button released state is stable, report nr of clicks and start new cycle
-	if (!key->pressed && (now - key->lastBounceTime) > MULTI_PRESS_TIME)
+	if (key->clickCount!=0 && !key->pressed && (now - key->lastBounceTime) > MULTI_PRESS_TIME)
 	{
 		ev.charCode = key->charCode;
 		ev.clicks = key->clickCount;
