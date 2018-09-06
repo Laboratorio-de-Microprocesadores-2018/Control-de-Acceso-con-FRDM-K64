@@ -18,6 +18,13 @@
 
 #define DATA_CARD_NUMBER_LENGTH 19
 
+typedef enum crDataState_ENUM {
+	_crNoData,
+	_crDataOk,
+	_crError
+}CR_DATA;
+
+
 /////////////////////////////////////////////////////////////////////////////////
 //                         Global function prototypes                          //
 /////////////////////////////////////////////////////////////////////////////////
@@ -32,7 +39,7 @@ void magneticCardPISR(void);
 
 // Services
 _Bool cardInserted(void);
-_Bool isDataReady(void);
+CR_DATA isDataReady(void);
 uint8_t getCardNumber(uint8_t * array);
 
 #endif /* CARDREADER_H_ */

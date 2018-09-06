@@ -31,7 +31,6 @@ void setError(_Bool s);
 /////////////////////////////////////////////////////////////////////////////////
 //                   Local variable definitions ('static')                     //
 /////////////////////////////////////////////////////////////////////////////////
-static uint8_t buffer[DATA_BUFFER_LENGTH];
 
 typedef enum crState_ENUM {
 	idle,
@@ -41,15 +40,17 @@ typedef enum crState_ENUM {
 	dataReady
 } CR_STATE;
 
+static uint8_t buffer[DATA_BUFFER_LENGTH];
 static CR_STATE crState;
 static	int8_t shiftCount;
 static	uint8_t word;
 static	uint8_t buffIndex;
-static 	uint8_t dataValue;//Value of the last input bit
-static 	uint8_t error;
+static 	uint8_t dataValue;	//Value of the last input bit
+static 	_Bool error;
 static uint8_t pin_enable;
 static uint8_t pin_clock;
 static uint8_t pin_data;
+
 
 void initCardReader(uint8_t enable_pin, uint8_t clock_pin, uint8_t data_pin)
 {
@@ -66,11 +67,16 @@ void initCardReader(uint8_t enable_pin, uint8_t clock_pin, uint8_t data_pin)
 	crState = idle;
 }
 
-_Bool isDataReady(void)
+CR_DATA isDataReady(void)
 {
-	_Bool retVal = false;
-	if(crState == dataReady)
-		retVal = true;
+	CR_DATA retVal = _crNoData;
+
+	if(error == true)
+		retVal = _crError;
+	else if(crState == dataReady)
+		retVal = _crDataOk;
+
+	error = false;
 	return retVal;
 }
 
@@ -165,7 +171,7 @@ static void processWord(uint8_t w)
 
 }
 
-static uint8_t checkOddParity(uint8_t w) //se hace generica?
+static uint8_t checkOddParity(uint8_t w)
 {
 	uint8_t parity = 1;
 	uint8_t word2check = w;
@@ -180,8 +186,7 @@ static uint8_t checkOddParity(uint8_t w) //se hace generica?
 
 static void processRawData(void)
 {
-	crState = dataReady;
-	if(buffIndex < MIN_BUFFER_DATA || checkLRCparity() == false)
+	if(buffIndex < MIN_BUFFER_DATA ||checkLRCparity() == false)
 		setError(true);
 }
 

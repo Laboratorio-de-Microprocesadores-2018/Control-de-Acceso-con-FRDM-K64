@@ -44,24 +44,25 @@ void App_Run (void)
 {
 	uint8_t dataCount = 0;
 	uint8_t cardData[DATA_CARD_NUMBER_LENGTH];
+	CR_DATA dataState;
 	for(uint8_t j=0 ; j < DATA_CARD_NUMBER_LENGTH ; j++)
 		cardData[j] = 0;
+
 	while(1)
 	{
-		if(isDataReady() == true)
+		dataState = isDataReady();
+		if(dataState == _crDataOk)
 		{
 			dataCount = getCardNumber(cardData);
-			if(dataCount > 0)
-			{
-				digitalWrite(PIN_LED_GREEN, LOW);
-				digitalWrite(PIN_LED_RED, HIGH);
-			}
-			else
-			{
-				digitalWrite(PIN_LED_GREEN, HIGH);
-				digitalWrite(PIN_LED_RED, LOW);
-			}
-
+			digitalWrite(PIN_LED_GREEN, LOW);
+			digitalWrite(PIN_LED_RED, HIGH);
+			digitalWrite(PIN_LED_BLUE, HIGH);
+		}
+		else if(dataState == _crError)
+		{
+			digitalWrite(PIN_LED_GREEN, HIGH);
+			digitalWrite(PIN_LED_RED, LOW);
+			digitalWrite(PIN_LED_BLUE, HIGH);
 		}
 	}
 
