@@ -1,3 +1,12 @@
+/////////////////////////////////////////////////////////////////////////////////
+//                              CONTROL DE ACCESO                              //
+//          Grupo 3 - Laboratorio de Microprocesadores - ITBA - 2018           //
+//	                                                                           //
+/////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////
+//                             Included header files                           //
+/////////////////////////////////////////////////////////////////////////////////
 #include <stdint.h>
 #include "Display.h"
 #include "Multiplexer.h"
@@ -7,7 +16,9 @@
 
 
 
-// Define active high/low pins
+/////////////////////////////////////////////////////////////////////////////////
+//                       Constants and macro definitions                       //
+/////////////////////////////////////////////////////////////////////////////////
 #define DATA_LENGTH					10
 #define DISPLAY_NUM					4
 #define DISLAY_PIN_NUM				7		// Number of pins
@@ -20,7 +31,10 @@
 
 
 
-// Pins being multiplexed
+/////////////////////////////////////////////////////////////////////////////////
+//                   Local variable definitions ('static')                     //
+/////////////////////////////////////////////////////////////////////////////////
+
 static const int displayPins[] = {PORTNUM2PIN(PC,2),PORTNUM2PIN(PC,0),PORTNUM2PIN(PA,2),PORTNUM2PIN(PC,5), PORTNUM2PIN(PC,3), PORTNUM2PIN(PC,7), PORTNUM2PIN(PB,23)};
 static const int dotPin = PORTNUM2PIN(PC,9);
 static const uint8_t numCode[] = {0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x67};
@@ -37,8 +51,21 @@ static int pinCall;
 
 
 
-//                Funciones estaticas
-//Additional functions
+/////////////////////////////////////////////////////////////////////////////////
+//                   Local function prototypes ('static')                      //
+/////////////////////////////////////////////////////////////////////////////////
+/**
+ * @brief This function will write the pins of the 7 segment display
+ *
+ * @param param1 Description of the first parameter of the function.
+ * @param param2 The second one, which follows @p param1.
+ * @return Describe what the function returns.
+ * @see Box_The_Second_Function
+ * @see Box_The_Last_One
+ * @see http://website/
+ * @note Something to note.
+ * @warning Warning.
+ */
 static void write7SegDisplay(uint8_t c);
 // Interrupt subroutine called to advance multiplexer
 static void displayPISR(void);
