@@ -17,10 +17,13 @@ void initDisplay(void);
 void dispPutchar(char c);
 void dispErase(void);
 void dispClear(void);
+void dispMessage(Message msg);
+void dispError(char c);
+void displayNum(int n);
 void brightUp(void);
 void brightDown(void);
-//void dispMessage(Message msg); // IMPLEMENTAR
-//void dispError(int n);   // IMPLEMENTAR
+
+
 void showCursor();
 void blinkCursor();
 void moveCursorLeft();
