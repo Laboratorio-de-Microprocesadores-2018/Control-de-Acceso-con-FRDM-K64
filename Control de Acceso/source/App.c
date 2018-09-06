@@ -14,7 +14,7 @@
 #include "Keyboard.h"
 #include "Display.h"
 #include "CardReader.h"
-
+#include "Buzzer.h"
 /** StateMachine function definitions */
 #include "StateMachine.h"
 
@@ -25,9 +25,6 @@
 //#include "FwSmCore.h"
 #include "FwSmAux.h"
 #include "StateMachineData.h"
-
-#include <ctype.h>
-
 
 static StateMachineData data;
 static FwSmDesc_t smDesc;
@@ -48,20 +45,25 @@ void App_Init (void)
 	/** Start the SM*/
 	FwSmStart(smDesc);
 
-	initMultiplexer();
-	initKeyboard();
-	sysTickInit();
+	pinMode(PIN_LED_GREEN,OUTPUT);
+	digitalWrite(PIN_LED_GREEN,1);
 	pinMode(PIN_LED_BLUE,OUTPUT);
 	digitalWrite(PIN_LED_BLUE,HIGH);
+
+
+	initKeyboard();
 	initDisplay();
-	//initCardReader();
-	//initBuzzer();
+	initMultiplexer();
+	sysTickInit();
+	initCardReader();
+	initBuzzer();
 }
 
 void App_Run (void)
 {
 
 	KeyboardEvent ev = getKeyboardEvent();
+
 	if(ev.type!=KB_NO_EVT)
 	{
 		char c = ev.charCode;
@@ -69,9 +71,12 @@ void App_Run (void)
 		{
 			if(('0'<=c)&&(c<='9'))
 			{
-				data.buffer[data.bufferLen] = c;
-				data.bufferLen++;
-				processEvent(NUMBER);
+				if(data.bufferLen<BUFFER_SIZE)
+				{
+					data.buffer[data.bufferLen] = c;
+					data.bufferLen++;
+					processEvent(NUMBER);
+				}
 			}
 			else if(c=='*')
 				processEvent(KEY_1);
@@ -82,17 +87,21 @@ void App_Run (void)
 		{
 			if(c=='#')
 				processEvent(LOGIN);
+			if(c=='*')
+				processEvent(RESET);
+			if(c=='0')
+				processEvent(SET_BRIGHTNESS);
 		}
 		else if(ev.type == KB_KEY_MULTI_PRESS)
 		{
-			if(c=='0' && ev.clicks==2)
-				processEvent(SET_BRIGHTNESS);
+
 		}
 	}
-	if(1/*hayTarjeta*/)
+	if(isDataReady()==_crDataOk)//HAY TARJETA
 	{
-		//data.cardNumber=getnumber();
-		data.cardPassed=true;
+		data.cardNumber = getCardNumber();
+		data.cardPassed = true;
+		processEvent(CARD);
 	}
 }
 

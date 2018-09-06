@@ -8,7 +8,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-//#include "Display.h"
+#include "Display.h"
+#include "Board.h"
+#include "GPIO.h"
+#include "Buzzer.h"
+
+
+#define DOOR_LED PIN_LED_GREEN
+
 /* ----------------------------------------------------------------------------------------------------------------- */
 typedef enum { MENU_ADD_ID, MENU_DELETE_ID, MENU_CHANGE_PASS, MENU_NO_OPTION }OPTION;
 typedef struct{
@@ -41,7 +48,7 @@ void SmExecuteFun(void)
 {
 	FwSmMakeTrans(sm,Execute);
 }
-
+void toggleRed();
 
 /** Action on the transition from Initial State to IDLE. */
 void Init(FwSmDesc_t smDesc)
@@ -50,7 +57,7 @@ void Init(FwSmDesc_t smDesc)
 	data = (StateMachineData*)FwSmGetData(smDesc);
 	sm = smDesc;
 	// Admin user
-	_data.users[0].number = 12345678;
+	_data.users[0].number = 4517660114820276;
 	_data.users[0].password = 12345;
 	_data.numberOfUsers++;
 	_data.displayBrightness = 100;
@@ -65,6 +72,7 @@ void Init(FwSmDesc_t smDesc)
 void displayBrightness(FwSmDesc_t smDesc)
 {
 	DEBUG_PRINT2("Brightness: %d\n",_data.displayBrightness);
+	dispPutchar('6');
 	//showBrightLevel();
 }
 
@@ -74,7 +82,7 @@ void increaseBrightness(FwSmDesc_t smDesc)
 	_data.timeoutCount = 0;
 	_data.displayBrightness += 1;
 	DEBUG_PRINT2("Brightness: %d\n", _data.displayBrightness);
-	//brightUp();
+	brightUp();
 	//showBrightLevel();
 }
 
@@ -84,7 +92,7 @@ void decreaseBrightness(FwSmDesc_t smDesc)
 	_data.timeoutCount = 0;
 	_data.displayBrightness -= 1;
 	DEBUG_PRINT2("Brightness: %d\n", _data.displayBrightness);
-	//brightDown();
+	brightDown();
 	//showBrightLevel();
 }
 
@@ -97,7 +105,6 @@ FwSmBool_t userRegistered(FwSmDesc_t smDesc)
 	if (data->cardPassed == true)
 	{
 		_data.userIndex = _searchUser(data->cardNumber);
-		data->cardPassed = false;
 	}
 	else
 		_data.userIndex = _searchUser(strtol(data->buffer,&dummyPtr,10));
@@ -129,7 +136,7 @@ void updateCountdown(FwSmDesc_t smDesc)
 	if (elapsedTime != _data.elapsedTime) // Si EXECUTION PERIOD ES 1 SEGUNDO ESTO NO HACE FALTA
 	{
 		_data.elapsedTime = elapsedTime;
-		// ACTUALIZAR DISPLAY
+		// ACTUALIZAR DISPLAY!!!
 		DEBUG_PRINT2("%d\n", _data.countDownTimer-(int)elapsedTime);
 		if (elapsedTime == _data.countDownTimer)
 			FwSmMakeTrans(smDesc, TIMEOUT);
@@ -139,21 +146,25 @@ void updateCountdown(FwSmDesc_t smDesc)
 void print(FwSmDesc_t smDesc)
 {
 	_data.timeoutCount = 0;
+	bip(HIGH_PITCH);
 	if (_data.clearDisplay == true)
 	{
 		_data.clearDisplay = false;
-		//dispClear();
+		dispClear();
 	}
 	int state = FwSmGetCurState(smDesc);
 	if (state == StateMachine_PASSWORD_INPUT ||
 		state == StateMachine_PASSWORD_INPUT_1 ||
 		state == StateMachine_PASSWORD_INPUT_2)
-		//putchar('-');
 
+	{
+		dispPutchar(data->buffer[data->bufferLen - 1]);
+		//dispPutchar('-');
 		DEBUG_PRINT3("%.*s", data->bufferLen, "----------");
+	}
 	else
 	{
-		//putchar(data->buffer[data->bufferLen - 1]);
+		dispPutchar(data->buffer[data->bufferLen - 1]);
 		//DEBUG_PRINT("putchar(%c)\n", data->buffer[data->bufferLen - 1]);
 		DEBUG_PRINT2('%s', data->buffer);
 	}
@@ -162,6 +173,7 @@ void print(FwSmDesc_t smDesc)
 void printMenu(FwSmDesc_t smDesc)
 {
 	//dispMessage(MENU);
+	dispClear();
 	_clearBuffer();
 	DEBUG_PRINT("       MENU:\n\Options:\n  1-Add ID \n  2-Change password \n  3-Delete ID \n  *-Back");
 
@@ -175,13 +187,13 @@ void clearBuffer(FwSmDesc_t smDesc)
 void clearScreen(FwSmDesc_t smDesc)
 {
 	DEBUG_PRINT("Clear screen\n");
-	//dispClear();
+	dispClear();
 }
 
 void clrBufferScreen(FwSmDesc_t smDesc)
 {
 	_clearBuffer();
-	clearScreen(smDesc);
+	dispClear();
 }
 
 /** Guard on the transition from CHOICE2 to Final State. */
@@ -206,6 +218,7 @@ void countAttempt(FwSmDesc_t smDesc)
 	_data.loginAttempts++;
 	DEBUG_PRINT3("%d / %d attempts\n", _data.loginAttempts, MAX_LOGIN_ATTEMPTS);
 	_clearBuffer();
+	dispClear();
 }
 
 /** Guard on the transition from CHOICE2 to COUNTDOWN. */
@@ -226,6 +239,7 @@ FwSmBool_t maxAttempts(FwSmDesc_t smDesc)
 void openDoor(FwSmDesc_t smDesc)
 {
 	DEBUG_PRINT("OPEN DOOR.\n");
+	digitalWrite(DOOR_LED,0);
 	//dispMessage(OPEN);
 }
 
@@ -233,7 +247,8 @@ void openDoor(FwSmDesc_t smDesc)
 void closeDoor(FwSmDesc_t smDesc)
 {
 	DEBUG_PRINT("CLOSE DOOR.\n");
-	//dispClear();
+	digitalWrite(DOOR_LED,1);
+	dispClear();
 }
 
 /** Do Action for the state OPEN_DOOR. */
@@ -266,7 +281,8 @@ void reset(FwSmDesc_t smDesc)
 	_data.menuOption = MENU_NO_OPTION;
 
 	_clearBuffer();
-	//dispClear();
+	dispClear();
+	doubleBip(HIGH_PITCH);
 }
 
 /** Do Action for the state . */
@@ -293,25 +309,39 @@ void checkTimeout2(FwSmDesc_t smDesc)
 void checkForCard(FwSmDesc_t smDesc)
 {
 	if(data->cardPassed==true && data->bufferLen==0)
+	{
 		FwSmMakeTrans(smDesc, KEY_2);
+		dispPutchar('0');
+		data->cardPassed=false;
+	}
 }
-
-
-void stop(FwSmDesc_t smDesc)
-{
-	//_data.exitRunning = true;
-}
-
 
 
 void errorSound(FwSmDesc_t smDesc)
 {
 	DEBUG_PRINT("EEEEEE\n");
+	longBip(LOW_PITCH);
+	//digitalWrite(PIN_LED_RED,0);
+	//sysTickAddDelayCall(&toggleRed,1);
+}
+
+void soundOK(FwSmDesc_t smDesc)
+{
+	DEBUG_PRINT("User accepted\n");
+	bip(HIGH_PITCH);
+	_clearBuffer();
+	dispClear();
+}
+
+void toggleRed()
+{
+	digitalToggle(PIN_LED_RED);
 }
 
 void bipSound(FwSmDesc_t smDesc)
 {
 	DEBUG_PRINT("BIPPPPP\n");
+	bip(HIGH_PITCH);
 }
 
 void storeOption(FwSmDesc_t smDesc)
@@ -381,8 +411,12 @@ void deleteID(FwSmDesc_t smDesc)
 void displayPasswordMatchError(FwSmDesc_t smDesc)
 {
 	DEBUG_PRINT("Passwords did not match! Try again.\n");
+	longBip(LOW_PITCH);
 	_data.tempUser.password = 0;
 	_clearBuffer();
+	dispClear();
+	//dispError(2);
+	//_data.clearDisplay = true;
 }
 
 void changePass(FwSmDesc_t smDesc)
@@ -393,7 +427,7 @@ void changePass(FwSmDesc_t smDesc)
 
 void storeID(FwSmDesc_t smDesc)
 {
-
+	bip(HIGH_PITCH);
 	if (_data.menuOption == MENU_ADD_ID)
 	{
 		if (data->cardPassed == true)
@@ -418,6 +452,7 @@ void storeID(FwSmDesc_t smDesc)
 void storePass(FwSmDesc_t smDesc)
 {
 	_data.tempUser.password = strtol(data->buffer,&dummyPtr,10);
+	bip(HIGH_PITCH);
 	_clearBuffer();
 	clearScreen(smDesc);
 }
@@ -460,21 +495,12 @@ void erase(FwSmDesc_t smDesc)
 	DEBUG_PRINT2('%s', data->buffer);
 	if (data->bufferLen > 0)
 	{
+		bip(HIGH_PITCH);
 		data->bufferLen--;	
 		data->buffer[data->bufferLen] = 0;
-		//erase(); diplay.h
+		dispErase();
 	}
 }
-
-
-
-
-
-
-
-
-
-
 
 static void _clearBuffer()
 {

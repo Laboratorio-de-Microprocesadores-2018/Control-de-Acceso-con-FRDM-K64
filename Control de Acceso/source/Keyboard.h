@@ -60,7 +60,7 @@ void initKeyboard();
 
 // Services
 KeyboardEvent getKeyboardEvent();
-//char getchar();
+char keyboardGetchar();
 bool keyboardHit();
 void keyboardFlush();
 uint8_t keyboardCount();

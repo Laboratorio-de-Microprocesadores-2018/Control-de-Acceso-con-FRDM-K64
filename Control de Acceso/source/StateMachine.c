@@ -2,7 +2,7 @@
  * @file StateMachine.c
  *
  * @author FW Profile code generator version 5.01
- * @date Created on: Sep 6 2018 2:56:6
+ * @date Created on: Sep 6 2018 12:54:51
  */
 
 /** StateMachine function definitions */
@@ -32,7 +32,7 @@ FwSmBool_t Guard3(FwSmDesc_t smDesc)
  * @param smDesc the state machine descriptor
  * @return 1 if the guard is fulfilled, otherwise 0.
  */
-static FwSmBool_t code86293(FwSmDesc_t smDesc)
+static FwSmBool_t code45099(FwSmDesc_t smDesc)
 {
 	return 1;
 }
@@ -62,7 +62,7 @@ FwSmDesc_t StateMachineCreate(void* smData)
 		8,	/* NSTATES - The number of states */
 		4,	/* NCPS - The number of choice pseudo-states */
 		33,	/* NTRANS - The number of transitions */
-		19,	/* NACTIONS - The number of state and transition actions */
+		20,	/* NACTIONS - The number of state and transition actions */
 		13	/* NGUARDS - The number of transition guards */
 	);
 	FwSmInit(&EsmDesc1);
@@ -86,7 +86,7 @@ FwSmDesc_t StateMachineCreate(void* smData)
 	FwSmAddTransStaToSta(&EsmDesc1, NUMBER, StateMachine_ID_INPUT, StateMachine_ID_INPUT, &print, NULL);
 	FwSmAddTransStaToSta(&EsmDesc1, KEY_1, StateMachine_ID_INPUT, StateMachine_ID_INPUT, &erase, NULL);
 	FwSmAddTransStaToCps(&EsmDesc1, KEY_2, StateMachine_ID_INPUT, CHOICE1, NULL, NULL);
-	FwSmAddTransCpsToSta(&EsmDesc1, CHOICE1, StateMachine_PASSWORD_INPUT, &clrBufferScreen, &userRegistered);
+	FwSmAddTransCpsToSta(&EsmDesc1, CHOICE1, StateMachine_PASSWORD_INPUT, &soundOK, &userRegistered);
 	FwSmAddTransCpsToFps(&EsmDesc1, CHOICE1, &errorSound, &Guard2);
 	FwSmAddTransStaToSta(&EsmDesc1, NUMBER, StateMachine_PASSWORD_INPUT, StateMachine_PASSWORD_INPUT, &print, NULL);
 	FwSmAddTransStaToSta(&EsmDesc1, KEY_1, StateMachine_PASSWORD_INPUT, StateMachine_PASSWORD_INPUT, &erase, NULL);
@@ -105,7 +105,7 @@ FwSmDesc_t StateMachineCreate(void* smData)
 	FwSmAddTransStaToCps(&EsmDesc1, CARD, StateMachine_MENU_ID_INPUT, CHOICE4, NULL, NULL);
 	FwSmAddTransCpsToSta(&EsmDesc1, CHOICE4, StateMachine_MENU, &displayIDError, &errorWithID);
 	FwSmAddTransCpsToSta(&EsmDesc1, CHOICE4, StateMachine_MENU, &deleteID, &isDeletingID);
-	FwSmAddTransCpsToSta(&EsmDesc1, CHOICE4, StateMachine_PASSWORD_INPUT_1, &storeID, &code86293);
+	FwSmAddTransCpsToSta(&EsmDesc1, CHOICE4, StateMachine_PASSWORD_INPUT_1, &storeID, &code45099);
 	FwSmAddTransCpsToSta(&EsmDesc1, CHOICE5, StateMachine_PASSWORD_INPUT_1, &displayPasswordMatchError, &passNotMatch);
 	FwSmAddTransCpsToSta(&EsmDesc1, CHOICE5, StateMachine_MENU, &addID, &isAddingID);
 	FwSmAddTransCpsToSta(&EsmDesc1, CHOICE5, StateMachine_MENU, &changePass, &isChangingPass);
@@ -124,8 +124,8 @@ FwSmDesc_t StateMachineCreate(void* smData)
 		3,	/* NSTATES - The number of states */
 		0,	/* NCPS - The number of choice pseudo-states */
 		9,	/* NTRANS - The number of transitions */
-		8,	/* NACTIONS - The number of state and transition actions */
-		1	/* NGUARDS - The number of transition guards */
+		9,	/* NACTIONS - The number of state and transition actions */
+		0	/* NGUARDS - The number of transition guards */
 	);
 	FwSmInit(&smDesc);
 
@@ -138,7 +138,7 @@ FwSmDesc_t StateMachineCreate(void* smData)
 	FwSmAddTransStaToSta(&smDesc, TIMEOUT, StateMachine_RUNNING, StateMachine_IDLE, &bipSound, NULL);
 	FwSmAddTransStaToSta(&smDesc, RESET, StateMachine_RUNNING, StateMachine_IDLE, NULL, NULL);
 	FwSmAddTransStaToSta(&smDesc, NUMBER, StateMachine_IDLE, StateMachine_RUNNING, &print, NULL);
-	FwSmAddTransStaToSta(&smDesc, SET_BRIGHTNESS, StateMachine_IDLE, StateMachine_SET_BRIGHTNESS, &displayBrightness,NULL);
+	FwSmAddTransStaToSta(&smDesc, SET_BRIGHTNESS, StateMachine_IDLE, StateMachine_SET_BRIGHTNESS, &displayBrightness, NULL);
 	FwSmAddTransStaToSta(&smDesc, CARD, StateMachine_IDLE, StateMachine_RUNNING, NULL, NULL);
 	FwSmAddTransStaToSta(&smDesc, TIMEOUT, StateMachine_SET_BRIGHTNESS, StateMachine_IDLE, &bipSound, NULL);
 	FwSmAddTransStaToSta(&smDesc, KEY_2, StateMachine_SET_BRIGHTNESS, StateMachine_SET_BRIGHTNESS, &increaseBrightness, NULL);

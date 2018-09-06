@@ -103,7 +103,7 @@ KeyboardEvent getKeyboardEvent()
 	return ev;
 }
 
-char getchar()
+char keyboardGetchar()
 {
 	KeyboardEvent ev;
 	// Ignore all KB_KEY_UP events
