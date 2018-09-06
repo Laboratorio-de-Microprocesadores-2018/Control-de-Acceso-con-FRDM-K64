@@ -12,6 +12,7 @@
 #define ES_char 0x0F
 
 #define DATA_BUFFER_LENGTH 40
+#define BIT_BUFFER_LENGTH 250
 #define DATA_MIN_COUNT 7
 #define WORD_SIZE 5	// size in bits of each word
 #define WORD_PARITY_BIT(x) (1 & ((x)>>(WORD_SIZE-1)) )
@@ -32,20 +33,25 @@ void setError(_Bool s);
 //                   Local variable definitions ('static')                     //
 /////////////////////////////////////////////////////////////////////////////////
 static uint8_t buffer[DATA_BUFFER_LENGTH];
+
+static	uint8_t bitCount;
+static	uint8_t clockCounter;
+static	uint8_t bitCount;
+static uint8_t bitBuffer[BIT_BUFFER_LENGTH];
+
+
 static _Bool dataReady;
 static _Bool savingData;
+static _Bool searchingSS;
 static _Bool wait4LRC;
 static	int8_t shiftCount;
 static	uint8_t word;
 static	uint8_t buffIndex;
 static 	uint8_t dataValue;//Value of the last input bit
-static uint8_t savedBitCount;	// Counts the number of bits saved so far
 static 	uint8_t error;
 static uint8_t pin_enable;
 static uint8_t pin_clock;
 static uint8_t pin_data;
-
-
 
 void initCardReader(uint8_t enable_pin, uint8_t clock_pin, uint8_t data_pin)
 {
@@ -91,53 +97,65 @@ static void enableCallback(void)
 	else//in the falling edge case the card is starting to be passed, so the driver resets
 	{
 		dataReady=false;
-		shiftCount=-1;		// to fix the offset of the first clock of the card
+		shiftCount=0;		// to fix the offset of the first clock of the card
 		buffIndex=0;
 		word=0;
 		dataValue=0;
-		savedBitCount = 0;
 		savingData = false;
+		searchingSS = true;
 		wait4LRC = false;
 		setError(false);
 		for(uint8_t i=0 ; i<DATA_BUFFER_LENGTH ; i++)
 			buffer[i]=0;
+
+		bitCount = 0;
+		clockCounter = 0;
+		for(uint8_t i=0 ; i<BIT_BUFFER_LENGTH ; i++)
+			bitBuffer[i]=0;
 	}
 }
 
 
 static void newBit(void)
 {
-	if(shiftCount== WORD_SIZE )
+	clockCounter++;
+	bitBuffer[bitCount++] = dataValue & 1;
+	if(searchingSS == true)
 	{
- 		shiftCount=0;
-		word=0;
+		word = word>>1;
+		word |= (dataValue & 1) << 4;
+		processWord(word);
+		if(searchingSS == false)
+			word = 0;
 	}
-	if(shiftCount >= 0)
+	else
+	{
+		if(shiftCount== WORD_SIZE )
+		{
+			shiftCount=0;
+			word=0;
+		}
 		word |= (dataValue & 1) << shiftCount;
 
-	if(++shiftCount == WORD_SIZE)
-		processWord(word);
+		if(++shiftCount == WORD_SIZE)
+			processWord(word);
+	}
 	dataValue = 0;
 }
 
 static void dataSignalChanged(void)
 {
-	if(savingData == true)	// FOR DEBUGGING ****** ERASE ******
-		savingData = true;
-
 	dataValue=1;//if there was a transition between rising edges the corresponding data bit is 1
 }
 
 static void processWord(uint8_t w)
 {
-
 	if( (w & 0x0F) == SS_char )
-		savingData = true;
-
-	if(w == 22 && savingData == true)
 	{
-	  w = 22;
+		savingData = true;
+		searchingSS = false;
 	}
+
 	if(savingData == true || wait4LRC == true)
 	{
 		if(getParity(w))
@@ -167,6 +185,7 @@ static void processWord(uint8_t w)
 /* Function to get parity of number n. It returns 1
    if n has odd parity, and returns 0 if n has even
    parity */
+
 static uint8_t getParity(uint8_t w) //se hace generica?
 {
 	uint8_t parity = 1;
@@ -217,6 +236,4 @@ uint8_t getCardNumber(uint8_t * array)
 	dataReady = false;		// clear the dataReady flag
 	return i;
 }
-
-
 

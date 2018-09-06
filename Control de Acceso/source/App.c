@@ -36,6 +36,7 @@ void App_Init (void)
 	NVIC_EnableIRQ(PORTB_IRQn);
 	NVIC_EnableIRQ(PORTC_IRQn);
 	NVIC_EnableIRQ(PORTD_IRQn);
+	NVIC_EnableIRQ(PORTE_IRQn);
 	//initBuzzer();
 }
 
