@@ -159,7 +159,7 @@ void displayPISR(void)
 /*******************************************************************************
  * SERVICES
  ******************************************************************************/
-void putchar(char c)
+void dispPutchar(char c)
 {
 	if(dataIndex < DATA_LENGTH - DISPLAY_NUM)
 	{
@@ -175,7 +175,7 @@ void putchar(char c)
 
 }
 
-void erase(void)
+void dispErase(void)
 {
 	if(dataIndex > 0)
 	{

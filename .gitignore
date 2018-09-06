@@ -6,6 +6,7 @@
 .metadata
 bin/
 Debug/
+Control de acceso FSM (FWProfile)/
 tmp/
 *.tmp
 *.bak
