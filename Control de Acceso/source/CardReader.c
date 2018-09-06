@@ -12,7 +12,7 @@
 #define ES_char 0x0F
 
 #define DATA_BUFFER_LENGTH 40
-#define BIT_BUFFER_LENGTH 250
+#define MIN_BUFFER_DATA 7	// minimum data that needs to be copied to the buffer before error
 #define WORD_SIZE 5	// size in bits of each word
 #define WORD_PARITY_BIT(x) (1 & ((x)>>(WORD_SIZE-1)) )
 
@@ -181,9 +181,7 @@ static uint8_t checkOddParity(uint8_t w) //se hace generica?
 static void processRawData(void)
 {
 	crState = dataReady;
-	if(checkLRCparity() == false)
-		setError(true);
-	if(crState != dataReady)
+	if(buffIndex < MIN_BUFFER_DATA || checkLRCparity() == false)
 		setError(true);
 }
 
