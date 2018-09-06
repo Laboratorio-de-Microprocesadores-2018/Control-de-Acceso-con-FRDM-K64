@@ -13,7 +13,6 @@
 
 #define DATA_BUFFER_LENGTH 40
 #define BIT_BUFFER_LENGTH 250
-#define DATA_MIN_COUNT 7
 #define WORD_SIZE 5	// size in bits of each word
 #define WORD_PARITY_BIT(x) (1 & ((x)>>(WORD_SIZE-1)) )
 
@@ -24,9 +23,9 @@ static void enableCallback(void);
 static void newBit(void);
 static void dataSignalChanged(void);
 static void processWord(uint8_t w);
-static uint8_t getParity(uint8_t w);
+static uint8_t checkOddParity(uint8_t w);
 static void processRawData(void);
-static void checkLRCparity();
+static _Bool checkLRCparity();
 void setError(_Bool s);
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -34,16 +33,15 @@ void setError(_Bool s);
 /////////////////////////////////////////////////////////////////////////////////
 static uint8_t buffer[DATA_BUFFER_LENGTH];
 
-static	uint8_t bitCount;
-static	uint8_t clockCounter;
-static	uint8_t bitCount;
-static uint8_t bitBuffer[BIT_BUFFER_LENGTH];
+typedef enum crState_ENUM {
+	idle,
+	searchingSS,
+	savingData,
+	waitingLRC,
+	dataReady
+} CR_STATE;
 
-
-static _Bool dataReady;
-static _Bool savingData;
-static _Bool searchingSS;
-static _Bool wait4LRC;
+static CR_STATE crState;
 static	int8_t shiftCount;
 static	uint8_t word;
 static	uint8_t buffIndex;
@@ -65,11 +63,15 @@ void initCardReader(uint8_t enable_pin, uint8_t clock_pin, uint8_t data_pin)
 	pinConfigureIRQ (enable_pin, IRQC_INTERRUPT_EITHER	, enableCallback );
 	pinConfigureIRQ (clock_pin, IRQC_INTERRUPT_RISING	, newBit);
 	pinConfigureIRQ (data_pin, IRQC_INTERRUPT_FALLING	, dataSignalChanged );
+	crState = idle;
 }
 
 _Bool isDataReady(void)
 {
-	return dataReady;
+	_Bool retVal = false;
+	if(crState == dataReady)
+		retVal = true;
+	return retVal;
 }
 
 void setError(_Bool s)		// for debugging
@@ -88,49 +90,43 @@ _Bool cardInserted(void)
 
 	return retVal;
 }
+
 static void enableCallback(void)
 {
 	if(digitalRead(pin_enable)==HIGH)//in the raising edge case the raw data block obtained is processed
 	{
 		processRawData();
 	}
-	else//in the falling edge case the card is starting to be passed, so the driver resets
+	else	//in the falling edge case the card is starting to be passed, so the driver resets
 	{
-		dataReady=false;
+		crState = searchingSS;
 		shiftCount=0;		// to fix the offset of the first clock of the card
 		buffIndex=0;
 		word=0;
 		dataValue=0;
-		savingData = false;
-		searchingSS = true;
-		wait4LRC = false;
 		setError(false);
 		for(uint8_t i=0 ; i<DATA_BUFFER_LENGTH ; i++)
 			buffer[i]=0;
-
-		bitCount = 0;
-		clockCounter = 0;
-		for(uint8_t i=0 ; i<BIT_BUFFER_LENGTH ; i++)
-			bitBuffer[i]=0;
 	}
 }
 
 
 static void newBit(void)
 {
-	clockCounter++;
-	bitBuffer[bitCount++] = dataValue & 1;
-	if(searchingSS == true)
+	if(crState == searchingSS)
 	{
 		word = word>>1;
 		word |= (dataValue & 1) << 4;
-		processWord(word);
-		if(searchingSS == false)
+		if( (word & 0x0F) == SS_char)
+		{
+			crState = savingData;
+			processWord(word);
 			word = 0;
+		}
 	}
-	else
+	else if(crState == savingData || crState == waitingLRC)
 	{
-		if(shiftCount== WORD_SIZE )
+		if(shiftCount == WORD_SIZE )
 		{
 			shiftCount=0;
 			word=0;
@@ -138,7 +134,13 @@ static void newBit(void)
 		word |= (dataValue & 1) << shiftCount;
 
 		if(++shiftCount == WORD_SIZE)
+		{
 			processWord(word);
+			if(crState == savingData && (word & 0x0F) == ES_char)	// if the End Sentinel was saved, stop saving data and wait for LRC
+				crState = waitingLRC;
+			else if(crState == waitingLRC)
+				crState = dataReady;
+		}
 	}
 	dataValue = 0;
 }
@@ -150,43 +152,20 @@ static void dataSignalChanged(void)
 
 static void processWord(uint8_t w)
 {
-	if( (w & 0x0F) == SS_char )
+	if(checkOddParity(w))
 	{
-		savingData = true;
-		searchingSS = false;
-	}
-
-	if(savingData == true || wait4LRC == true)
-	{
-		if(getParity(w))
-		{
-			if(wait4LRC == true)
-				wait4LRC = false;
-
-			w &= 0x0F;	//clear MS nibble
-			if(buffIndex < 40)
-				buffer[buffIndex++]=w;
-			else
-				setError(true);
-
-		}
+		w &= 0x0F;	//clear MS nibble
+		if(buffIndex < 40)
+			buffer[buffIndex++]=w;
 		else
 			setError(true);
 	}
+	else
+		setError(true);
 
-	if( (w & 0x0F) == ES_char )	// if the End Sentinel was saved, stop saving data and wait for LRC
-	{
-		savingData = false;
-		wait4LRC = true;	// next word is LRC
-	}
 }
 
-// Source: https://www.geeksforgeeks.org/program-to-find-parity/
-/* Function to get parity of number n. It returns 1
-   if n has odd parity, and returns 0 if n has even
-   parity */
-
-static uint8_t getParity(uint8_t w) //se hace generica?
+static uint8_t checkOddParity(uint8_t w) //se hace generica?
 {
 	uint8_t parity = 1;
 	uint8_t word2check = w;
@@ -201,30 +180,32 @@ static uint8_t getParity(uint8_t w) //se hace generica?
 
 static void processRawData(void)
 {
-	checkLRCparity();
-	dataReady = true;
-	if(buffIndex < DATA_MIN_COUNT)
+	crState = dataReady;
+	if(checkLRCparity() == false)
 		setError(true);
-	if(savingData == true)
+	if(crState != dataReady)
 		setError(true);
 }
 
-static void checkLRCparity()
+static _Bool checkLRCparity()
 {
+	_Bool retVal = true;
+
 	uint8_t parityAcc = 0;
 	for(uint8_t i = 0 ; i < DATA_BUFFER_LENGTH - 1 ; i++)
 	{
 		parityAcc ^= buffer[i];
 	}
 	if(parityAcc != buffer[DATA_BUFFER_LENGTH-1])
-		setError(true);
+		retVal = false;
 
+	return retVal;
 }
 
 uint8_t getCardNumber(uint8_t * array)
 {
 	uint8_t i = 0;
-	if(array != NULL && dataReady == true && error == false)
+	if(array != NULL && crState == dataReady && error == false)
 	{
 		while( buffer[i+1] != FS_char && i < DATA_CARD_NUMBER_LENGTH)
 		{
@@ -233,7 +214,7 @@ uint8_t getCardNumber(uint8_t * array)
 		}
 	}
 
-	dataReady = false;		// clear the dataReady flag
+	crState = idle;
 	return i;
 }
 
