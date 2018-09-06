@@ -7,7 +7,6 @@
 #ifndef _BOARD_H_
 #define _BOARD_H_
 
-
 /////////////////////////////////////////////////////////////////////////////////
 //                    Enumerations, structures and typedefs                    //
 /////////////////////////////////////////////////////////////////////////////////
@@ -31,8 +30,8 @@ enum { PA, PB, PC, PD, PE };
 #define HIGH    1
 
 // On Board User LEDs
-#define PIN_LED_RED     PORTNUM2PIN()
-#define PIN_LED_GREEN   PORTNUM2PIN()
+#define PIN_LED_RED     PORTNUM2PIN(PB,22)
+#define PIN_LED_GREEN   PORTNUM2PIN(PE,26)
 #define PIN_LED_BLUE    PORTNUM2PIN(PB,21) // PTB21
 
 #define LED_ACTIVE      LOW

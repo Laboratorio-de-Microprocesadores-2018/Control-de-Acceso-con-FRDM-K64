@@ -4,45 +4,75 @@
 #include "GPIO.h"
 #include "SysTick.h"
 
-#define BUZZER_PIN PORTNUM2PIN(PA,9)
+#define BUZZER_PIN PORTNUM2PIN(PD,3)
 
 static void startBuzzer();
+static void toggleBuzzer();
 static void stopBuzzer();
+static int soundOn;
+static int soundNow;
+static Tone tone;
 
 void initBuzzer()
 {
 	pinMode(BUZZER_PIN,OUTPUT);
+	sysTickAddCallback(&toggleBuzzer,1/2500.0);
 }
 
-void bip()
+void bip(Tone t)
 {
-	digitalWrite(BUZZER_PIN,1);
+	tone = t;
+	startBuzzer();
 	sysTickAddDelayCall(&stopBuzzer,BIP_TIME_MS * MS2S);
 }
 
-void doubleBip()
+void doubleBip(Tone t)
 {
-	digitalWrite(BUZZER_PIN,1);
-	sysTickAddDelayCall(&stopBuzzer,DOUBLE_BIP_TIME_MS * MS2S);
-	sysTickAddDelayCall(&startBuzzer,2*DOUBLE_BIP_TIME_MS * MS2S);
+	tone = t;
+	startBuzzer();
 	sysTickAddDelayCall(&stopBuzzer,3*DOUBLE_BIP_TIME_MS * MS2S);
+	sysTickAddDelayCall(&startBuzzer,2*DOUBLE_BIP_TIME_MS * MS2S);
+	sysTickAddDelayCall(&stopBuzzer,DOUBLE_BIP_TIME_MS * MS2S);
 }
 
-void longBip()
+void longBip(Tone t)
 {
-	digitalWrite(BUZZER_PIN,1);
+	tone = t;
+	startBuzzer();
 	sysTickAddDelayCall(&stopBuzzer,LONG_BIP_TIME_MS * MS2S);
+}
+
+
+
+
+static void startBuzzer()
+{
+	soundOn=1;
+}
+
+static void toggleBuzzer()
+{
+	if(soundOn==1)
+	{
+		if(tone==LOW_PITCH)
+		{
+			if(soundNow)
+			{
+				digitalToggle(BUZZER_PIN);
+				soundNow=0;
+			}
+			else
+				soundNow=1;
+		}
+		else
+			digitalToggle(BUZZER_PIN);
+	}
 }
 
 static void stopBuzzer()
 {
+	soundOn=0;
 	digitalWrite(BUZZER_PIN,0);
 }
-
-static void startBuzzer()
-{
-	digitalWrite(BUZZER_PIN,1);
-}
-
 
 

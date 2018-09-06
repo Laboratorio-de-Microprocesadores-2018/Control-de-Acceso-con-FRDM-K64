@@ -154,6 +154,11 @@ void errorSound(FwSmDesc_t smDesc);
 *
 * @param smDesc the state machine descriptor
 */
+void soundOK(FwSmDesc_t smDesc);
+/**
+*
+* @param smDesc the state machine descriptor
+*/
 void bipSound(FwSmDesc_t smDesc);
 
 /**

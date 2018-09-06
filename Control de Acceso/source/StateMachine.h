@@ -12,7 +12,7 @@
  * @image html StateMachine.png
  *
  * @author FW Profile code generator version 5.01
- * @date Created on: Sep 6 2018 2:56:6
+ * @date Created on: Sep 6 2018 12:54:50
  */
 
 /** Make sure to include this header file only once */
@@ -62,20 +62,5 @@
  */
 FwSmDesc_t StateMachineCreate(void* smData);
 
-/**
- * Guard on the transition from CHOICE1 to Final State.
- * Else
- * @param smDesc the state machine descriptor
- * @return 1 if the guard is fulfilled, otherwise 0.
- */
-FwSmBool_t Guard2(FwSmDesc_t smDesc);
-
-/**
- * Guard on the transition from CHOICE2 to PASSWORD_INPUT.
- * Else
- * @param smDesc the state machine descriptor
- * @return 1 if the guard is fulfilled, otherwise 0.
- */
-FwSmBool_t Guard3(FwSmDesc_t smDesc);
 
 #endif /* StateMachine_H_ */

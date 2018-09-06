@@ -1,5 +1,3 @@
-#pragma once
-
 #include <stdint.h>
 #include <stdbool.h>
 /** Maximum number of users. */
