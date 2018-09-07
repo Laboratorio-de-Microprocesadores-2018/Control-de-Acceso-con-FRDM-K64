@@ -1,3 +1,4 @@
+
 /////////////////////////////////////////////////////////////////////////////////
 //                              CONTROL DE ACCESO                              //
 //          Grupo 3 - Laboratorio de Microprocesadores - ITBA - 2018           //
@@ -67,6 +68,16 @@ typedef struct BoxStruct_struct {
   int b;    /**< Some documentation for the member BoxStruct#b. */
   double c; /**< Etc. */
 } BoxStruct;
+
+/**
+ * @brief Example showing how to document a function with Doxygen.
+ *
+ * DESCRIPTION
+ *
+ * @param param1 Description of the first parameter of the function.
+ * @param param2 The second one, which follows @p param1.
+ * @return Describe what the function returns.
+ */
 
 /**
  * @brief Example showing how to document a function with Doxygen.
