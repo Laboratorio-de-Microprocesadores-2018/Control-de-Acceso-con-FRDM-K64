@@ -37,9 +37,39 @@ void initCardReader();
 
 
 // Services
+
+/**
+ * @brief Function to check if a card is being read
+ *
+ * @return Returns true if a card is being read. False otherwise.
+ */
 _Bool cardInserted(void);
+
+/**
+ * @brief Function to check if card information has been read.
+ *
+ * Function to check if card information has been read.
+ *
+ * @return Returns data type CR_DATA which needs to be checked for error in
+ * readings or for new card data.
+ */
 CR_DATA isDataReady(void);
+
+
+/**
+ * @brief Function to copy the card number to a given array.
+ *
+ * @param array Destination array to copy the card number. Must be at least DATA_CARD_NUMBER_LENGTH cells long.
+ * @return Returns the amount of characters copied. If zero, either there was an error
+ * in the card data, the data was not ready or the array given was null.
+ */
 uint8_t getCardString(uint8_t * array);
+
+/**
+ * @brief Function to get the equivalent card number data.
+ *
+ * @return Returns the card number in equivalent decimal value.
+ */
 uint64_t getCardNumber();
 
 #endif /* CARDREADER_H_ */

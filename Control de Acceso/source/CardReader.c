@@ -28,10 +28,10 @@ static void processRawData(void);
 static _Bool checkLRCparity();
 void setError(_Bool s);
 uint64_t myPow(uint64_t b, uint64_t e);
+
 /////////////////////////////////////////////////////////////////////////////////
 //                   Local variable definitions ('static')                     //
 /////////////////////////////////////////////////////////////////////////////////
-
 typedef enum crState_ENUM {
 	idle,
 	searchingSS,
@@ -52,7 +52,6 @@ static 	_Bool error;
 
 void initCardReader()
 {
-
 	pinMode(PIN_ENABLE, INPUT);
 	pinMode(PIN_CLOCK, INPUT);
 	pinMode(PIN_DATA, INPUT);
@@ -63,6 +62,14 @@ void initCardReader()
 	crState = idle;
 }
 
+/**
+ * @brief Function to check if card information has been read.
+ *
+ * Function to check if card information has been read.
+ *
+ * @return Returns data type CR_DATA which needs to be checked for error in
+ * readings or for new card data.
+ */
 CR_DATA isDataReady(void)
 {
 	CR_DATA retVal = _crNoData;
@@ -84,6 +91,11 @@ void setError(_Bool s)		// for debugging
 		error = false;
 }
 
+/**
+ * @brief Function to check if a card is being read
+ *
+ * @return Returns true if a card is being read. False otherwise.
+ */
 _Bool cardInserted(void)
 {
 	_Bool retVal = false;
@@ -115,8 +127,8 @@ static void enableCallback(void)
 
 static void newBit(void)
 {
-	if(crState == searchingSS)
-	{
+	if(crState == searchingSS) 		// while searching for the start sentinel advance in
+	{								// the bits in the card data looking for the SS character
 		word = word>>1;
 		word |= (dataValue & 1) << 4;
 		if( (word & 0x0F) == SS_char)
@@ -186,6 +198,12 @@ static void processRawData(void)
 		setError(true);
 }
 
+/**
+ * @brief XOR every character in the card data and check for parity with the RLC
+ *
+ * @return Returns true if the LRC parity check is correct with the data on the card.
+ */
+//
 static _Bool checkLRCparity()
 {
 	_Bool retVal = true;
@@ -201,6 +219,13 @@ static _Bool checkLRCparity()
 	return retVal;
 }
 
+/**
+ * @brief Function to copy the card number to a given array.
+ *
+ * @param array Destination array to copy the card number. Must be at least DATA_CARD_NUMBER_LENGTH cells long.
+ * @return Returns the amount of characters copied. If zero, either there was an error
+ * in the card data, the data was not ready or the array given was null.
+ */
 uint8_t getCardString(uint8_t * array)
 {
 	uint8_t i = 0;
@@ -217,6 +242,11 @@ uint8_t getCardString(uint8_t * array)
 	return i;
 }
 
+/**
+ * @brief Function to get the equivalent card number data.
+ *
+ * @return Returns the card number in equivalent decimal value.
+ */
 uint64_t getCardNumber()
 {
 	char array[20];
@@ -246,6 +276,12 @@ uint64_t getCardNumber()
 	return(n);
 }
 
+
+/**
+ * @brief Calculates b to the power of e.
+ *
+ * @return Returns b to the power of e.
+ */
 uint64_t myPow(uint64_t b, uint64_t e)
 {
 	if(e==0)
