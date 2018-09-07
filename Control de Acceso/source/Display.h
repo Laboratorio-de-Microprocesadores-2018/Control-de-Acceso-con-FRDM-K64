@@ -39,6 +39,22 @@ void dispPutchar(char c);
  */
 void dispErase(void);
 
+/**
+ * @brief
+ * @param
+ */
+void dispOpenDoor(void);
+
+/**
+ * @brief
+ * @param
+ */
+void dispCloseDoor(void);
+
+/*
+ *
+ */
+void dispErrorLed(void);
 
 /**
  * @brief

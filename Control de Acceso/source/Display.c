@@ -38,9 +38,9 @@
 #define DISP_FREQUENCY		(float)(MUX_FREQUENCY * NUMBER_OF_STEPS)
 
 /**	Maximum amount of brightness, this will emulate the duty cicle of the timne the display is on */
-#define MAXBRIGHT			((float)DISP_FREQUENCY)/((float)MUX_FREQUENCY)
+#define MAXBRIGHT			100
 /**	Following the line of thought of MAXBRIGHT, this will be the minimum duty cicle of the time the display is on */
-#define MINBRIGHT			MAXBRIGHT/100
+#define MINBRIGHT			1
 
 /** Define GPIO pins. */
 enum{
@@ -53,6 +53,8 @@ enum{
 	SEG_G = PORTNUM2PIN(PB,23),
 	DP    = PORTNUM2PIN(PC,9)
 };
+
+#define DOOR_LED PORTNUM2PIN(PC,16)
 
 //** Define the binary values for the display pins, in order to display certain character */
 typedef enum{
@@ -77,6 +79,8 @@ typedef enum{
 	DISP_o      = 0x5C,
 	DISP_u      = 0x1C,
 	DISP_t		= 0x78,
+	DISP_b		= 0x7C,
+	DISP_i		= 0x10,
 	DISP_dot	= 0x80
 }dispCodes;
 
@@ -129,6 +133,11 @@ static void write7SegDisplay(uint8_t c);
  */
 static void displayPISR(void);
 
+/*
+ *
+ */
+static void toggleRedLed();
+
 /**
  * @brief Initializes all the variables for the proper functionality of the dispalay
  */
@@ -149,10 +158,12 @@ void initDisplay(void)
 	pinMode(PIN_LED_GREEN,OUTPUT);
 	pinMode(PIN_LED_BLUE,OUTPUT);
 	pinMode(PIN_LED_RED,OUTPUT);
+	pinMode(DOOR_LED,OUTPUT);
 
 	digitalWrite(PIN_LED_GREEN,HIGH);
 	digitalWrite(PIN_LED_BLUE,HIGH);
 	digitalWrite(PIN_LED_RED,HIGH);
+	digitalWrite(DOOR_LED,0);
 
 	/*	The callback of the display is added to the sysTick callback list*/
 	sysTickAddCallback(&displayPISR,(float)(1/DISP_FREQUENCY));
@@ -275,8 +286,14 @@ void dispPutchar(char c)
 			case 't' :
 				data[index + cursor] = DISP_t;
 				break;
+			case 'b' :
+				data[index + cursor] = DISP_b;
+				break;
+			case 'i' :
+				data[index + cursor] = DISP_i;
+				break;
 			case '.' :
-				data[index + cursor] |= DISP_dot ;
+				data[index + cursor-1] |= DISP_dot ;
 				break;
 			default:
 				data[index + cursor] = DISP_DASH;
@@ -347,8 +364,10 @@ void dispMessage(Message msg)
 
 void dispString(char * s)
 {
+	ASSERT(s!=NULL);
+
 	while((*s)!='\0')
-		putchar((*s++));
+		dispPutchar((*s++));
 }
 
 void dispError(char c)
@@ -369,20 +388,21 @@ void displayNum(int n)
 void brightnessUp(void)
 {
 	//static float intenseFraction;
-	if(brightLevel+STEP <= MAXBRIGHT)
+	if(brightLevel+BRIGHTNESS_STEP <= MAXBRIGHT)
 	{
-		brightLevel += STEP;
+		brightLevel += BRIGHTNESS_STEP;
 		//intenseFraction = ((float) IO)^(((brightLevel)/((float) MAXBRIGHT))-1);
 		brightCount = brightLevel;
 
 	}
 }
+
 void brightnessDown(void)
 {
 	//static float intenseFraction;
-	if(brightLevel-STEP >= MINBRIGHT)
+	if(brightLevel-BRIGHTNESS_STEP >= MINBRIGHT)
 	{
-		brightLevel -= STEP;
+		brightLevel -= BRIGHTNESS_STEP;
 		//intenseFraction = ((float) IO)^(((brightLevel)/((float) MAXBRIGHT))-1);
 		brightCount = brightLevel;
 	}
@@ -393,9 +413,33 @@ int getBrightnessLevel(void)
 	return brightLevel;
 }
 
+void dispOpenDoor(void)
+{
+	digitalWrite(DOOR_LED,1);
+	digitalWrite(PIN_LED_GREEN,0);
+}
+
+void dispCloseDoor(void)
+{
+	digitalWrite(DOOR_LED,0);
+	digitalWrite(PIN_LED_GREEN,1);
+}
+
+void dispErrorLed(void)
+{
+	digitalWrite(PIN_LED_RED,0);
+	sysTickAddDelayCall(&toggleRedLed,0.7);
+}
+
+static void toggleRedLed()
+{
+	digitalToggle(PIN_LED_RED);
+}
+
 static void write7SegDisplay(uint8_t c)
 {
 	for(int i = 0; i < 8; i++)
 		digitalWrite(displayPins[i], (((c) >> i) & 0x01));
 }
+
 

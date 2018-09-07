@@ -41,15 +41,16 @@ void App_Init (void)
 
 	/** Check that the it is properly configured */
 	FwSmErrCode_t status = FwSmCheckRec(FSM);
-	ASSERT(status != smSuccess);
+	ASSERT(status == smSuccess);
 
 	/** Start the SM*/
 	FwSmStart(FSM);
 
 	/** Drivers initialization */
-	initKeyboard();
-	initDisplay();
 	initMultiplexer();
+	initDisplay();
+	initKeyboard();
+
 	sysTickInit();
 	initCardReader();
 	initBuzzer();
@@ -67,6 +68,7 @@ void App_Run (void)
 		{
 			if(('0'<=c)&&(c<='9'))
 			{
+
 				if(data.bufferLen<BUFFER_SIZE)
 				{
 					data.buffer[data.bufferLen] = c;

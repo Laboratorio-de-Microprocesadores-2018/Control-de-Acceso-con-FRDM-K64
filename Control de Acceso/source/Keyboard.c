@@ -149,7 +149,8 @@ static void updateKey(Key* key)
 		key->lastBounceTime = now;
 
 	// Debounce the key
-	if (now - key->lastBounceTime > DEBOUNCE_TIME && key->curState != key->pressed)
+//	if (now - key->lastBounceTime > DEBOUNCE_TIME && key->curState != key->pressed)
+	if (key->curState != key->pressed)
 	{
 		key->pressed = key->curState;
 		ev.charCode = key->charCode;
