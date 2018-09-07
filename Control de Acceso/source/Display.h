@@ -1,11 +1,10 @@
-/* ____________________________________________________________________________
-  /\               ITBA - Laboratorio de Microprocesadores - 2018              \
-  \_|                                 Grupo 3                                  |
-    |	Display.h                                                              |
-    |                                                                          |
-    |  ________________________________________________________________________|_
-    \_/_________________________________________________________________________/
-*/
+/////////////////////////////////////////////////////////////////////////////////
+//                              CONTROL DE ACCESO                              //
+//          Grupo 3 - Laboratorio de Microprocesadores - ITBA - 2018           //
+//	                                                                           //
+/////////////////////////////////////////////////////////////////////////////////
+
+
 #ifndef DISPLAY_H_
 #define DISPLAY_H_
 
@@ -18,10 +17,13 @@ void initDisplay(void);
 void dispPutchar(char c);
 void dispErase(void);
 void dispClear(void);
+void dispMessage(Message msg);
+void dispError(char c);
+void displayNum(int n);
 void brightUp(void);
 void brightDown(void);
-//void dispMessage(Message msg); // IMPLEMENTAR
-//void dispError(int n);   // IMPLEMENTAR
+
+
 void showCursor();
 void blinkCursor();
 void moveCursorLeft();
