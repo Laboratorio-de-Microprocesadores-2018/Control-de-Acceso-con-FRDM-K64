@@ -1,13 +1,38 @@
+/////////////////////////////////////////////////////////////////////////////////
+//                             Included header files                           //
+/////////////////////////////////////////////////////////////////////////////////
 #include "./gpio.h"
 #include "hardware.h"
 #include <string.h>
+/////////////////////////////////////////////////////////////////////////////////
+//                       Constants and macro definitions                       //
+/////////////////////////////////////////////////////////////////////////////////
 
-#define PIN_PORT(x) (x)/32UL
-#define PIN_POS(x) (x)%32UL
+#define PINS 32
+#define PORTS 6
+#define PIN_PORT(x) (x)/32UL /*gets the port number from the result of PORTNUMTOPIN*/
+#define PIN_POS(x) (x)%32UL	/*gets the pin number,inside a specific port, from the result of PORTNUMTOPIN*/
+
+
+/*
+ * structure for a small buffer which also has it's size as a field
+ */
+typedef struct  {
+	uint8_t *arr;
+	uint8_t size;
+}buffer;
+
+/////////////////////////////////////////////////////////////////////////////////
+//                   Local variable definitions ('static')                     //
+/////////////////////////////////////////////////////////////////////////////////
 
 static PORT_Type * const ports[] = PORT_BASE_PTRS;
 static GPIO_Type * const gpio[] = GPIO_BASE_PTRS;
 
+
+/*
+ * Array of inturruption services for each pin of each port
+ * */
 static pinIrqFun_t portAIRQs[32];
 static pinIrqFun_t portBIRQs[32];
 static pinIrqFun_t portCIRQs[32];
@@ -16,16 +41,17 @@ static pinIrqFun_t portEIRQs[32];
 static pinIrqFun_t  * const portsIRQs[5]={portAIRQs,portBIRQs,portCIRQs,portDIRQs,portEIRQs};//
 
 
-typedef struct  {
-	uint8_t *arr;
-	uint8_t size;
-}buffer;
 
+/*
+ * Array of buffers containing the pin number, in the given port [0,31], of each pin with an
+ * enabled interruption
+ * */
 static uint8_t portAIndxs[32];
 static uint8_t portBIndxs[32];
 static uint8_t portCIndxs[32];
 static uint8_t portDIndxs[32];
 static uint8_t portEIndxs[32];
+
 buffer buffA={portAIndxs,0};
 buffer buffB={portBIndxs,0};
 buffer buffC={portCIndxs,0};
@@ -33,7 +59,7 @@ buffer buffD={portDIndxs,0};
 buffer buffE={portEIndxs,0};
 
 static buffer *const portsIRQIndxs[5]={&buffA,&buffB,&buffC,&buffD,&buffE};
-
+/*-----------------------------------------------------------------------------------------*/
 
 
 /**
@@ -43,35 +69,35 @@ static buffer *const portsIRQIndxs[5]={&buffA,&buffB,&buffC,&buffD,&buffE};
  */
 void pinMode (uint8_t pin, uint8_t mode)
 {
-	if(pin >= 6*32)
+	if(pin >= PORTS*PINS)
 		return;
 
-	uint8_t portnum = PIN_PORT(pin); // Numero del puerto (A,B,C,D,E)
-	uint8_t pinpos = PIN_POS(pin); // Numero del pin [0:31]
+	uint8_t portnum = PIN_PORT(pin); //Port Number (A,B,C,D,E)
+	uint8_t pinpos = PIN_POS(pin); // Pin Number [0:31]
 
 
-	// Configurar el pin como GPIO
+	// Pin configuration as GPIO
 	ports[portnum]->PCR[pinpos] &= ~PORT_PCR_MUX_MASK;
 	ports[portnum]->PCR[pinpos] |= PORT_PCR_MUX(1);
 
 	switch(mode)
 	{
 	case INPUT:
-		ports[portnum]->PCR[pinpos] &= ~PORT_PCR_PE(1); // Poner en 0 el Pull Enable
-		gpio[portnum]->PDDR &= ~(1UL<<pinpos); // Poner en 0 el bit n del PDDR correspondiente
+		ports[portnum]->PCR[pinpos] &= ~PORT_PCR_PE(1); // Pull Enable=0
+		gpio[portnum]->PDDR &= ~(1UL<<pinpos); // Set as 0 the n bit of the corresponding PDDR
 		break;
 	case INPUT_PULLUP:
-		ports[portnum]->PCR[pinpos] |= PORT_PCR_PE(1); // Poner en 1 el Pull Enable
-		ports[portnum]->PCR[pinpos] |= PORT_PCR_PS(1); // Poner en 1 el Pull Select
+		ports[portnum]->PCR[pinpos] |= PORT_PCR_PE(1); // Pull Enable=1
+		ports[portnum]->PCR[pinpos] |= PORT_PCR_PS(1); // Pull Select=1
 		gpio[portnum]->PDDR &= ~(1UL<<pinpos);
 		break;
 	case INPUT_PULLDOWN:
-		ports[portnum]->PCR[pinpos] |= PORT_PCR_PE(1); // Poner en 1 el Pull Enable
-		ports[portnum]->PCR[pinpos] &= ~PORT_PCR_PS(1); // Poner en 0 el Pull Select
+		ports[portnum]->PCR[pinpos] |= PORT_PCR_PE(1); // Pull Enable=1
+		ports[portnum]->PCR[pinpos] &= ~PORT_PCR_PS(1); // Pull Select=0
 		gpio[portnum]->PDDR &= ~(1UL<<pinpos);
 		break;
 	case OUTPUT:
-		ports[portnum]->PCR[pinpos] &= ~PORT_PCR_PE(1); // Poner en 0 el Pull Enable
+		ports[portnum]->PCR[pinpos] &= ~PORT_PCR_PE(1); // Pull Enable=0
 		gpio[portnum]->PDDR |= (1UL<<pinpos);
 		break;
 	}
@@ -84,11 +110,14 @@ void pinMode (uint8_t pin, uint8_t mode)
  */
 void digitalWrite (uint8_t pin, uint8_t v)
 {
-	uint8_t value=v&1;
-	//assert(pin < 6*32);
+	if(pin >= PORTS*PINS)
+		return;
 
-	uint8_t i = pin/32; // Numero del puerto (A,B,C,D,E)
-	uint8_t n = pin%32; // Numero del pin [0:31]
+	uint8_t value=v&1;
+
+
+	uint8_t i = PIN_PORT(pin);//Port Number (A,B,C,D,E)
+	uint8_t n = PIN_POS(pin); //Pin number [0,31]
 	static GPIO_Type * const gpio[] = GPIO_BASE_PTRS;
 
 	gpio[i]->PDOR = ((gpio[i]->PDOR & (~(1<<n))) | (value<<n));
@@ -101,10 +130,12 @@ void digitalWrite (uint8_t pin, uint8_t v)
  */
 void digitalToggle (uint8_t pin)
 {
-	//assert(pin >= 6*32);
 
-	uint8_t i = pin/32; // Numero del puerto (A,B,C,D,E)
-	uint8_t n = pin%32; // Numero del pin [0:31]
+	if(pin >= PORTS*PINS)
+		return;
+
+	uint8_t i = PIN_PORT(pin);//Port Number (A,B,C,D,E)
+	uint8_t n = PIN_POS(pin); //Pin number [0,31]
 	static GPIO_Type * const gpio[] = GPIO_BASE_PTRS;
 	gpio[i]->PTOR |= 1<<n;
 }
@@ -116,10 +147,11 @@ void digitalToggle (uint8_t pin)
  */
 uint8_t digitalRead (uint8_t pin)
 {
-	//assert(pin >= 6*32);
+	if(pin >= PORTS*PINS)
+		return 0xFF;
 
-	uint8_t i = pin/32; // Numero del puerto (A,B,C,D,E)
-	uint8_t n = pin%32; // Numero del pin [0:31]
+	uint8_t i = PIN_PORT(pin);//Port Number (A,B,C,D,E)
+	uint8_t n = PIN_POS(pin); //Pin number [0,31]
 	static GPIO_Type * const gpio[] = GPIO_BASE_PTRS;
 	return ((gpio[i]->PDIR>>n) & 1);
 }
@@ -131,57 +163,65 @@ uint8_t digitalRead (uint8_t pin)
  * @param irqFun function to call on pin event
  * @return Registration succeed
  */
-uint8_t pinConfigureIRQ (uint8_t pin, uint8_t irqMode, pinIrqFun_t irqFun)//Habria que desactivar interrupciones globalmente, no?
+uint8_t pinConfigureIRQ (uint8_t pin, uint8_t irqMode, pinIrqFun_t irqFun)
 {
 
 
-	uint8_t retVal=0;
+	uint8_t port=PIN_PORT(pin);
+	uint8_t pos=PIN_POS(pin);
+
+	uint8_t retVal=1;
 	if(pin >= 6*32 || (irqMode!=IRQC_DISABLE && irqFun == NULL))
-		retVal=1;
+		retVal=0;//Error
 	else
 	{
-		NVIC_EnableIRQ(PORTA_IRQn+PIN_PORT(pin));
-		portsIRQs[PIN_PORT(pin)][PIN_POS(pin)]=irqFun;
+		//Set the callback
+		portsIRQs[port][pos]=irqFun;
 
 		//IRQC Mode set
-		ports[PIN_PORT(pin)]->PCR[PIN_POS(pin)] &= ~PORT_PCR_IRQC_MASK;//Sets IRQC part in 0000
+		ports[port]->PCR[pos] &= ~PORT_PCR_IRQC_MASK;//Sets IRQC part in 0000
 		switch(irqMode)
 		{
 			case IRQC_DISABLE:
-				ports[PIN_PORT(pin)]->PCR[PIN_POS(pin)] |= PORT_PCR_IRQC(IRQC_DISABLE);//Sets IRQC for disable mode
-				for(uint8_t i=0; i<portsIRQIndxs[PIN_PORT(pin)]->size ; i++)
+				ports[port]->PCR[pos] |= PORT_PCR_IRQC(IRQC_DISABLE);//Sets IRQC for disable mode
+
+				//Searches for the index in the buffer and deletes it
+				for(uint8_t i=0; i<portsIRQIndxs[port]->size ; i++)
 				{
-					if(portsIRQIndxs[PIN_PORT(pin)]->arr[i]==PIN_POS(pin))
+					if(portsIRQIndxs[port]->arr[i]==pos)
 					{
-						for(uint8_t j=i; j<portsIRQIndxs[PIN_PORT(pin)]->size-1; j++)
+						for(uint8_t j=i; j<portsIRQIndxs[port]->size-1; j++)
 						{
-							portsIRQIndxs[PIN_PORT(pin)]->arr[j]=portsIRQIndxs[PIN_PORT(pin)]->arr[j+1];
+							portsIRQIndxs[port]->arr[j]=portsIRQIndxs[port]->arr[j+1];
 						}
-						portsIRQIndxs[PIN_PORT(pin)]->size--;
+						portsIRQIndxs[port]->size--;
 						break;
 					}
 				}
 
 				break;
 			case IRQC_INTERRUPT_RISING: case IRQC_INTERRUPT_FALLING	: case IRQC_INTERRUPT_EITHER:
-				ports[PIN_PORT(pin)]->PCR[PIN_POS(pin)] |= PORT_PCR_IRQC(irqMode);//Sets IRQC for the specified mode
+				NVIC_EnableIRQ(PORTA_IRQn+port);
+				ports[port]->PCR[pos] |= PORT_PCR_IRQC(irqMode);//Sets IRQC for the specified mode
 				uint8_t i=0;
-				while(i<portsIRQIndxs[PIN_PORT(pin)]->size)
+
+				//Adds the index to the buffer if it was not there already
+				while(i<portsIRQIndxs[port]->size)
 				{
-					if(portsIRQIndxs[PIN_PORT(pin)]->arr[i]!=PIN_POS(pin))
+					if(portsIRQIndxs[port]->arr[i]!=pos)
 						i++;
 					else
 						break;
 				}
-				if(i==portsIRQIndxs[PIN_PORT(pin)]->size)
-				{
-					portsIRQIndxs[PIN_PORT(pin)]->arr[i]=PIN_POS(pin);
-					portsIRQIndxs[PIN_PORT(pin)]->size++;
+				if(i==portsIRQIndxs[port]->size)
+				{	//The index was not in the buffer
+					portsIRQIndxs[port]->arr[i]=pos;
+					portsIRQIndxs[port]->size++;
 				}
 
 				break;
 			default:
-				retVal=1;
+				retVal=0;//Error
 				break;
 		}
 	}
@@ -190,7 +230,9 @@ uint8_t pinConfigureIRQ (uint8_t pin, uint8_t irqMode, pinIrqFun_t irqFun)//Habr
 
 
 
-//All IRQ Handlers work the same way
+/*
+ * All IRQ Handlers work the same way
+ * */
 void PORTA_IRQHandler(void)
 {
 	if(buffA.size!=0)//if there is any pin enabled for interrupts

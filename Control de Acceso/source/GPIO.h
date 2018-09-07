@@ -40,14 +40,14 @@ enum {
 enum
 {
 	IRQC_DISABLE				= 0x00,
-	IRQC_DMA_RISING				= 0x01,
-	IRQC_DMA_FALLING			= 0x02,
-	IRQC_DMA_EITHER				= 0x03,
-	IRQC_INTERRUPT_L0			= 0x08,
+	IRQC_DMA_RISING				= 0x01,//Not developed
+	IRQC_DMA_FALLING			= 0x02,//Not developed
+	IRQC_DMA_EITHER				= 0x03,//Not developed
+	IRQC_INTERRUPT_L0			= 0x08,//Not developed
 	IRQC_INTERRUPT_RISING		= 0x09,
 	IRQC_INTERRUPT_FALLING		= 0x0A,
 	IRQC_INTERRUPT_EITHER		= 0x0B,
-	IRQC_INTERRUPT_L1			= 0x0C,
+	IRQC_INTERRUPT_L1			= 0x0C,//Not developed
 };
 
 
@@ -68,7 +68,7 @@ void pinMode (uint8_t pin, uint8_t mode);
  * @param pin the pin whose IRQ mode you wish to set (according PORTNUM2PIN)
  * @param irqMode disable, risingEdge, fallingEdge or bothEdges
  * @param irqFun function to call on pin event
- * @return Registration succeed
+ * @return Registration succeed(1=success)
  */
 uint8_t pinConfigureIRQ (uint8_t pin, uint8_t irqMode, pinIrqFun_t irqFun);
 
@@ -88,7 +88,7 @@ void digitalToggle (uint8_t pin);
 /**
  * @brief Reads the value from a specified digital pin, either HIGH or LOW.
  * @param id the pin to read (according PORTNUM2PIN)
- * @return HIGH or LOW
+ * @return HIGH or LOW. An inexistent pin number gives back 0xFF
  */
 uint8_t digitalRead (uint8_t pin);
 
