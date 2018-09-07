@@ -11,12 +11,8 @@
 #include <stdlib.h>			//	To convert int to char
 #include "Display.h"		//	This is the header of the file
 #include "Multiplexer.h"	//	This is used for the communication with the mux
-
-//#include "SysTick.h"		//
-//#include "GPIO.h"
-
-
-
+#include "SysTick.h"		//
+#include "GPIO.h"
 
 /////////////////////////////////////////////////////////////////////////////////
 //                       Constants and macro definitions                       //
@@ -30,7 +26,7 @@
 #define ON_DISP_PIN					1
 
 
-#define DISP_FREQUENCY				(float)(MUX_FREQUENCY*100)						//	Frequency for the dispPISR callback (It has to be faster than the one of th MUX, in order to change the brightness)
+#define DISP_FREQUENCY				(float)(MUX_FREQUENCY*10)						//	Frequency for the dispPISR callback (It has to be faster than the one of th MUX, in order to change the brightness)
 #define MAXBRIGHT					((float)DISP_FREQUENCY)/((float)MUX_FREQUENCY)	//	Maximum amount of brightness, this will emulate the duty cicle of the timne the display is on
 #define MINBRIGHT					MAXBRIGHT/100									//	Following the line of thought of MAXBRIGHT, this will be the minimum duty cicle of the time the display is on
 
@@ -47,12 +43,16 @@ typedef enum{
 	DISP_EIGHT 	= 0x7F,
 	DISP_NINE 	= 0x67,
 	DISP_DASH 	= 0x40,
-	DISP_A		= 0x37,
+	DISP_A		= 0x77,
 	DISP_E		= 0x79,
 	DISP_L		= 0x38,
 	DISP_P		= 0x73,
 	DISP_n		= 0x54,
-	DISP_r		= 0x50
+	DISP_r		= 0x50,
+	DISP_d      = 0x5E,
+	DISP_o      = 0x5C,
+	DISP_u      = 0x1C,
+	DISP_t		= 0x78
 }dispCodes;
 
 
@@ -164,38 +164,70 @@ void dispPutchar(char c)
 		{
 			case '0' :
 				data[dataIndex + dataCursor] = DISP_ZERO;
+				break;
 			case '1' :
 				data[dataIndex + dataCursor] = DISP_ONE;
+				break;
 			case '2' :
 				data[dataIndex + dataCursor] = DISP_TWO;
+				break;
 			case '3' :
 				data[dataIndex + dataCursor] = DISP_THREE;
+				break;
 			case '4' :
 				data[dataIndex + dataCursor] = DISP_FOUR;
+				break;
 			case '5' :
 				data[dataIndex + dataCursor] = DISP_FIVE;
+				break;
 			case '6' :
 				data[dataIndex + dataCursor] = DISP_SIX;
+				break;
 			case '7' :
 				data[dataIndex + dataCursor] = DISP_SEVEN;
+				break;
 			case '8' :
 				data[dataIndex + dataCursor] = DISP_EIGHT;
+				break;
 			case '9' :
 				data[dataIndex + dataCursor] = DISP_NINE;
+				break;
 			case '-' :
 				data[dataIndex + dataCursor] = DISP_DASH;
+				break;
 			case 'A' :
 				data[dataIndex + dataCursor] = DISP_A;
+				break;
 			case 'E' :
 				data[dataIndex + dataCursor] = DISP_E;
+				break;
 			case 'L' :
 				data[dataIndex + dataCursor] = DISP_L;
+				break;
 			case 'P' :
 				data[dataIndex + dataCursor] = DISP_P;
+				break;
 			case 'n' :
 				data[dataIndex + dataCursor] = DISP_n;
+				break;
 			case 'r' :
 				data[dataIndex + dataCursor] = DISP_r;
+				break;
+			case 'd' :
+				data[dataIndex + dataCursor] = DISP_d;
+				break;
+			case 'o' :
+				data[dataIndex + dataCursor] = DISP_o;
+				break;
+			case 'u' :
+				data[dataIndex + dataCursor] = DISP_u;
+				break;
+			case 't' :
+				data[dataIndex + dataCursor] = DISP_t;
+				break;
+//			case '.' :
+//				data[dataIndex + dataCursor] = ;
+				break;
 		}
 		if(dataCursor < DISPLAY_NUM)
 		{
@@ -237,14 +269,25 @@ void dispMessage(Message msg){
 	switch(msg){
 		case PASS:
 			dispPutchar('P');dispPutchar('A');dispPutchar('5');dispPutchar('5');
+			break;
 		case ADD:
-			dispPutchar('A');dispPutchar('0');dispPutchar('0');
+			dispPutchar('A');dispPutchar('d');dispPutchar('d');
+			break;
 		case DEL:
 			dispPutchar('0');dispPutchar('E');dispPutchar('L');
+			break;
 		case OPEN:
 			dispPutchar('0');dispPutchar('P');dispPutchar('E');dispPutchar('n');
+			break;
 		case ERR:
 			dispPutchar('E');dispPutchar('r');dispPutchar('r');
+			break;
+		case EDIT:
+			dispPutchar('E');dispPutchar('d');dispPutchar('1');dispPutchar('t');
+			break;
+		case SUDO:
+			dispPutchar('5');dispPutchar('u');dispPutchar('d');dispPutchar('o');
+			break;
 	}
 }
 void dispError(char c)
@@ -255,7 +298,7 @@ void dispError(char c)
 
 void displayNum(int n)
 {
-	static char numChars[DISPUM + 1];
+	char numChars[DISPLAY_NUM + 1];
 	itoa(n,numChars,10);
 
 	dispClear();
@@ -267,34 +310,33 @@ void displayNum(int n)
 
 }
 
-void brightUp(void)
+void brightnessUp(void)
 {
 	//static float intenseFraction;
-	if(brightLevel < MAXBRIGHT)
+	if(brightLevel+STEP <= MAXBRIGHT)
 	{
-		brightLevel += 5;
+		brightLevel += STEP;
+
 		//intenseFraction = ((float) IO)^(((brightLevel)/((float) MAXBRIGHT))-1);
 		brightCount = brightLevel;
 
 	}
 }
-void brightDown(void)
+void brightnessDown(void)
 {
 	//static float intenseFraction;
-	if(brightLevel > MINBRIGHT)
+	if(brightLevel-STEP >= MINBRIGHT)
 	{
-		brightLevel -= 5;
+		brightLevel -= STEP;
 		//intenseFraction = ((float) IO)^(((brightLevel)/((float) MAXBRIGHT))-1);
 		brightCount = brightLevel;
-		if(brightCount <= 0)
-		{
-			brightCount = 1;
-		}
-
 	}
 }
 
-
+int getBrightnessLevel(void)
+{
+	return brightLevel;
+}
 /*******************************************************************************
  * ADDITIONAL FUNCTIONS
  ******************************************************************************/

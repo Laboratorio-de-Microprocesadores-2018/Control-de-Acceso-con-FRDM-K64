@@ -8,7 +8,8 @@
 #ifndef DISPLAY_H_
 #define DISPLAY_H_
 
-typedef enum{PASS,ADD,DEL,OPEN,ERR}Message;
+#define STEP 5
+typedef enum{SUDO,PASS,ADD,EDIT,DEL,OPEN,ERR}Message;
 // Display initialization
 void initDisplay(void);
 
@@ -20,9 +21,9 @@ void dispClear(void);
 void dispMessage(Message msg);
 void dispError(char c);
 void displayNum(int n);
-void brightUp(void);
-void brightDown(void);
-
+void brightnessUp(void);
+void brightnessDown(void);
+int getBrightnessLevel(void);
 
 void showCursor();
 void blinkCursor();

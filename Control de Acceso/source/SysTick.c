@@ -1,5 +1,18 @@
 #include <Board.h>
 #include "SysTick.h"
+
+#define DEBUG_SYSTICK
+
+#ifdef DEBUG_SYSTICK
+#include "GPIO.h"
+#endif
+
+
+
+
+#define SYSTICK_TEST_PIN PORTNUM2PIN(PD,1)
+
+
 // Structure to store SysTick callbacks
 typedef struct{
 	SysTickFnc f;        // Function pointer
@@ -26,6 +39,10 @@ uint64_t millis()
 
 uint32_t sysTickInit()
 {
+#ifdef DEBUG_SYSTICK
+		pinMode(SYSTICK_TEST_PIN,OUTPUT);
+#endif
+
 	uint32_t ticks = SYSTICK_ISR_PERIOD_S*__CORE_CLOCK__;
 
 	if ((ticks - 1UL) > SysTick_LOAD_RELOAD_Msk)
@@ -71,7 +88,9 @@ bool sysTickAddDelayCall(SysTickFnc fnc,float time)
 
 __ISR__ SysTick_Handler(void)
 {
-
+#ifdef DEBUG_SYSTICK
+		digitalWrite(SYSTICK_TEST_PIN,1);
+#endif
 	// Iterate all registered functions
 	for(int i=0;i<callbacksSize;i++)
 	{
@@ -95,5 +114,7 @@ __ISR__ SysTick_Handler(void)
 			}
 		}
 	}
-
+#ifdef DEBUG_SYSTICK
+		digitalWrite(SYSTICK_TEST_PIN,0);
+#endif
 }

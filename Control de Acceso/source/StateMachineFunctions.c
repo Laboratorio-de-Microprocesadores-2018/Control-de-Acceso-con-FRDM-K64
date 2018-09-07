@@ -57,7 +57,7 @@ void Init(FwSmDesc_t smDesc)
 	data = (StateMachineData*)FwSmGetData(smDesc);
 	sm = smDesc;
 	// Admin user
-	_data.users[0].number = 4517660114820276;
+	_data.users[0].number = 4517660105004211;// ITBA DIEGO 4517660114820276;
 	_data.users[0].password = 12345;
 	_data.numberOfUsers++;
 	_data.displayBrightness = 100;
@@ -72,28 +72,28 @@ void Init(FwSmDesc_t smDesc)
 void displayBrightness(FwSmDesc_t smDesc)
 {
 	DEBUG_PRINT2("Brightness: %d\n",_data.displayBrightness);
-	dispPutchar('6');
-	//showBrightLevel();
+	displayNum(getBrightnessLevel());
+	bip(HIGH_PITCH);
 }
 
 
 void increaseBrightness(FwSmDesc_t smDesc)
 {
 	_data.timeoutCount = 0;
-	_data.displayBrightness += 1;
 	DEBUG_PRINT2("Brightness: %d\n", _data.displayBrightness);
-	brightUp();
-	//showBrightLevel();
+	brightnessUp();
+	displayNum(getBrightnessLevel());
+	bip(HIGH_PITCH);
 }
 
 
 void decreaseBrightness(FwSmDesc_t smDesc)
 {
 	_data.timeoutCount = 0;
-	_data.displayBrightness -= 1;
 	DEBUG_PRINT2("Brightness: %d\n", _data.displayBrightness);
-	brightDown();
-	//showBrightLevel();
+	brightnessDown();
+	displayNum(getBrightnessLevel());
+	bip(HIGH_PITCH);
 }
 
 
@@ -137,6 +137,8 @@ void updateCountdown(FwSmDesc_t smDesc)
 	{
 		_data.elapsedTime = elapsedTime;
 		// ACTUALIZAR DISPLAY!!!
+		displayNum(_data.countDownTimer-(int)elapsedTime);
+		bip(LOW_PITCH);
 		DEBUG_PRINT2("%d\n", _data.countDownTimer-(int)elapsedTime);
 		if (elapsedTime == _data.countDownTimer)
 			FwSmMakeTrans(smDesc, TIMEOUT);
@@ -158,8 +160,7 @@ void print(FwSmDesc_t smDesc)
 		state == StateMachine_PASSWORD_INPUT_2)
 
 	{
-		dispPutchar(data->buffer[data->bufferLen - 1]);
-		//dispPutchar('-');
+		dispPutchar('-');
 		DEBUG_PRINT3("%.*s", data->bufferLen, "----------");
 	}
 	else
@@ -172,8 +173,7 @@ void print(FwSmDesc_t smDesc)
 
 void printMenu(FwSmDesc_t smDesc)
 {
-	//dispMessage(MENU);
-	dispClear();
+	dispMessage(SUDO);
 	_clearBuffer();
 	DEBUG_PRINT("       MENU:\n\Options:\n  1-Add ID \n  2-Change password \n  3-Delete ID \n  *-Back");
 
@@ -217,8 +217,10 @@ void countAttempt(FwSmDesc_t smDesc)
 {
 	_data.loginAttempts++;
 	DEBUG_PRINT3("%d / %d attempts\n", _data.loginAttempts, MAX_LOGIN_ATTEMPTS);
+	dispMessage(ERR);
+	longBip(LOW_PITCH);
+	_data.clearDisplay=1;
 	_clearBuffer();
-	dispClear();
 }
 
 /** Guard on the transition from CHOICE2 to COUNTDOWN. */
@@ -240,7 +242,7 @@ void openDoor(FwSmDesc_t smDesc)
 {
 	DEBUG_PRINT("OPEN DOOR.\n");
 	digitalWrite(DOOR_LED,0);
-	//dispMessage(OPEN);
+	dispMessage(OPEN);
 }
 
 /** Exit Action for the state OPEN_DOOR. */
@@ -311,7 +313,6 @@ void checkForCard(FwSmDesc_t smDesc)
 	if(data->cardPassed==true && data->bufferLen==0)
 	{
 		FwSmMakeTrans(smDesc, KEY_2);
-		dispPutchar('0');
 		data->cardPassed=false;
 	}
 }
@@ -328,9 +329,10 @@ void errorSound(FwSmDesc_t smDesc)
 void soundOK(FwSmDesc_t smDesc)
 {
 	DEBUG_PRINT("User accepted\n");
+	dispMessage(PASS);
+	_data.clearDisplay = 1;
 	bip(HIGH_PITCH);
 	_clearBuffer();
-	dispClear();
 }
 
 void toggleRed()
@@ -350,17 +352,17 @@ void storeOption(FwSmDesc_t smDesc)
 	{
 	case '1':
 		_data.menuOption = MENU_ADD_ID;
-		//dispMessage(ADD);
+		dispMessage(ADD);
 		DEBUG_PRINT("Adding new ID. First input the new ID number or pass magnetic card.\n");
 		break;
 	case '2':
 		_data.menuOption = MENU_CHANGE_PASS;
-		//dispMessage(PASS);
+		dispMessage(EDIT);
 		DEBUG_PRINT("Changing pass. First input the ID number or pass magnetic card.\n");
 		break;
 	case '3':
 		_data.menuOption = MENU_DELETE_ID;
-		//dispMessage(DEL);
+		dispMessage(DEL);
 		DEBUG_PRINT("Deleting ID. Input the ID you want to delete or pass magnetic card.\n");
 		break;
 	}
@@ -385,6 +387,10 @@ void displayIDError(FwSmDesc_t smDesc)
 		DEBUG_PRINT("ERROR: This user is not registered!.\n");
 		//dispError(3);
 	}
+	dispMessage(ERR);
+	sysTickAddDelayCall(&printMenu,0.7);
+
+	longBip(LOW_PITCH);
 	_data.clearDisplay = true;
 	_clearBuffer();
 }
@@ -414,9 +420,8 @@ void displayPasswordMatchError(FwSmDesc_t smDesc)
 	longBip(LOW_PITCH);
 	_data.tempUser.password = 0;
 	_clearBuffer();
-	dispClear();
-	//dispError(2);
-	//_data.clearDisplay = true;
+	dispMessage(PASS);
+	_data.clearDisplay=1;
 }
 
 void changePass(FwSmDesc_t smDesc)
@@ -427,7 +432,6 @@ void changePass(FwSmDesc_t smDesc)
 
 void storeID(FwSmDesc_t smDesc)
 {
-	bip(HIGH_PITCH);
 	if (_data.menuOption == MENU_ADD_ID)
 	{
 		if (data->cardPassed == true)
@@ -445,16 +449,19 @@ void storeID(FwSmDesc_t smDesc)
 		// antes al guardia "errorWithID"
 	}
 
-	//
+	bip(HIGH_PITCH);
+	dispMessage(PASS);
+	_data.clearDisplay=1;
 	_clearBuffer();
-	clearScreen(smDesc);
 }
 void storePass(FwSmDesc_t smDesc)
 {
 	_data.tempUser.password = strtol(data->buffer,&dummyPtr,10);
+
 	bip(HIGH_PITCH);
+	dispMessage(PASS);
+	_data.clearDisplay=1;
 	_clearBuffer();
-	clearScreen(smDesc);
 }
 
 FwSmBool_t errorWithID(FwSmDesc_t smDesc)
@@ -463,7 +470,8 @@ FwSmBool_t errorWithID(FwSmDesc_t smDesc)
 
 	if ((registered && _data.menuOption==MENU_ADD_ID) ||
 		(!registered && _data.menuOption==MENU_CHANGE_PASS) ||
-		(!registered && _data.menuOption == MENU_DELETE_ID))
+		(!registered && _data.menuOption == MENU_DELETE_ID) ||
+		(_data.userIndex==0 &&_data.menuOption == MENU_DELETE_ID ))
 		return 1;
 	else
 		return 0;
