@@ -117,7 +117,7 @@ static void enableCallback(void)
 	else	//in the falling edge case the card is starting to be passed, so the driver resets
 	{
 		crState = searchingSS;
-		shiftCount=0;		// to fix the offset of the first clock of the card
+		shiftCount=0;
 		buffIndex=0;
 		word=0;
 		dataValue=0;
@@ -130,8 +130,8 @@ static void enableCallback(void)
 
 static void newBit(void)
 {
-	if(crState == searchingSS) 		// while searching for the start sentinel advance in
-	{								// the bits in the card data looking for the SS character
+	if(crState == searchingSS) 		// while searching for the start sentinel, take groups of
+	{								// five bits on the card data and look for the SS character
 		word = word>>1;
 		word |= (dataValue & 1) << 4;
 		if( (word & 0x0F) == SS_char)
@@ -141,8 +141,8 @@ static void newBit(void)
 			word = 0;
 		}
 	}
-	else if(crState == savingData || crState == waitingLRC)
-	{
+	else if(crState == savingData || crState == waitingLRC)	// once SS was found, take groups of five bits
+	{														// and save them in buffer. This is the card data.
 		if(shiftCount == WORD_SIZE )
 		{
 			shiftCount=0;
@@ -155,7 +155,7 @@ static void newBit(void)
 			processWord(word);
 			if(crState == savingData && (word & 0x0F) == ES_char)	// if the End Sentinel was saved, stop saving data and wait for LRC
 				crState = waitingLRC;
-			else if(crState == waitingLRC)
+			else if(crState == waitingLRC)		// Since the next word is the LRC, once a new word has been read the data is ready.
 				crState = dataReady;
 		}
 	}
@@ -164,7 +164,7 @@ static void newBit(void)
 
 static void dataSignalChanged(void)
 {
-	dataValue=1;//if there was a transition between rising edges the corresponding data bit is 1
+	dataValue=1;	//if there was a transition between rising edges, the corresponding data bit is 1
 }
 
 static void processWord(uint8_t w)
@@ -241,7 +241,7 @@ uint8_t getCardString(uint8_t * array)
 		}
 	}
 
-	crState = idle;
+	crState = idle;		// set state to idle to prepare for new data
 	return i;
 }
 
@@ -255,6 +255,7 @@ uint64_t getCardNumber()
 	char array[20];
 
 	uint8_t i = 0;
+	// copy the card number into a new array
 	if(array != NULL && crState == dataReady && error == false)
 	{
 		while( buffer[i+1] != FS_char && i < DATA_CARD_NUMBER_LENGTH)
@@ -264,8 +265,8 @@ uint64_t getCardNumber()
 		}
 	}
 	array[i]='\0';
-	crState = idle;
 
+	// transform the binary numbers in the array into its equivalent decimal value
 	uint64_t n=0;
 	uint8_t len=i;
 	uint64_t exp;
@@ -276,6 +277,7 @@ uint64_t getCardNumber()
 		i--;
 	}
 
+	crState = idle;		// set state to idle to prepare for new data
 	return(n);
 }
 
