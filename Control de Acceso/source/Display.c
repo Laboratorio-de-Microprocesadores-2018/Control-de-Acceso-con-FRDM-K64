@@ -63,15 +63,14 @@ typedef enum{
 
 static const int displayPins[] = {PORTNUM2PIN(PC,2),PORTNUM2PIN(PC,0),PORTNUM2PIN(PA,2),PORTNUM2PIN(PC,5), PORTNUM2PIN(PC,3), PORTNUM2PIN(PC,7), PORTNUM2PIN(PB,23)};	// Definition of the pins to be used, in order to write the display
 static const int dotPin = PORTNUM2PIN(PC,9);		// Definition of the "dot" of the 7 segment display pin
-//static const uint8_t numCode[] = {0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x67};
 static char data[DATA_LENGTH];		//	Array of codes to be printed in the displays
-static int muxActivePin;			//	This will be the number of display is being used, it will be defined by the mux
+static int muxActivePin;			//	Number of display being used, it will be defined by the mux
 static int dataIndex;				//	Last number of the array data, to be displayed
 static int dataCursor;				//	Pointer to the next position to be written in the data array
-static int brightLevel;				//	bright level that emulates the duty cicle of the display
-static int brightCount;				//	Counter in order to control the duty cicle of the display
-static int callCount;				//	Counter in order to control the duty cicle of the display
-//static int pinCall;
+static int brightLevel;				//	bright level that emulates the duty cycle of the display
+static int brightCount;				//	Counter in order to control the duty cycle of the display
+static int callCount;				//	Counter in order to control the duty cycle of the display
+
 
 
 
@@ -86,20 +85,93 @@ static int callCount;				//	Counter in order to control the duty cicle of the di
  * @param c The code to be printed in the pins of the display, as each display has 8 pins, is of type uint8_t
  */
 static void write7SegDisplay(uint8_t c);
+
 /**
  * @brief Interrupt subroutine called to update the state of the displays
  */
 static void displayPISR(void);
 
+
+/////////////////////////////////////////////////////////////////////////////////
+//                   Local function definitions			                       //
+/////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Initializes all the variables for the proper functionality of the dispalay
+ * @brief Interrupt subroutine called to update the state of the displays.
+ * The displays will be ON, one at a time. The one being updated will be defined by the active pin set by the MUX.
+ * Then, in @data, it will be stored the array of characters to be written. In order to know which character corresponds
+ * to each display, the variables @dataIndex and @dataCursor will be used to reference the correct characters,inside
+ * @data. @dataIndex will always refer to the number of char inside @data, that must be printed to the first display.
+ * Then, the chars to be printed in the other displays will re referred by @daataIndex + @muxActivePin.
+ */
+void displayPISR(void)
+{
+	static uint8_t c;					/**<	The eventual code @c to be written to the active is display is declared*/
+	static int newActivePin;
+	newActivePin = getActivePin();		/**<	The value of the active display is updated. As the frequency with which the displayCallback is called is 'k' times greater than the frequency of the muxCallback, the callback will be called 'k' times before this value actually changes*/
+
+	/*	If the callBack its being called for first time (callCount != 0), or the active display is the same as the last time, callCount is incremented.
+	 * This way, the percentage of the time that has passed with the display ON, it will be proportional to callCount
+	 * Then the duty cycle of the display will be set by how many times the callback is called.
+	 * If i haven't reached the duty cycle required for the given brightLevel, then i keep the pins as they where written when the activePin changed*/
+	if((muxActivePin == newActivePin) & (callCount != 0))
+	{
+		if(callCount < brightCount)			/**<	While the callCount is less than the count needed for the brightness desired*/
+		{
+			callCount ++;					/**<	The callCount keeps incrementing*/
+		}else if(callCount == brightCount)	/**<	When the bright level desired is reached*/
+		{
+			c = 0x00;						/**<	The display is turned OFF, writing ceroes on its corresponding pins*/
+			write7SegDisplay(c);
+			callCount ++;					/**<	Finally the callCount is incremented one more time so this sequence is not called again in a useless way*/
+		}
+
+
+	}else
+	{
+		/*	In the case the active pin is changed, or the callBack is called for first time, the callCount is reseted and the
+		 *  pins of the given display are written with the corresponding char code, given by @data.
+		 **/
+		callCount = 0;
+		muxActivePin = newActivePin;	/**<	The active pin is updated*/
+		if((muxActivePin >= 0) & (muxActivePin < dataCursor))
+		{
+			c = data[dataIndex + muxActivePin];		/**<	The char code to be written is referenced as it was explained in the @brief*/
+		}else
+		{
+			c = 0x00;								/**<	If something is not okay with the active pin, nothing is displayed*/
+		}
+		write7SegDisplay(c);						/**<	Finally the char code is written and callCount incremented*/
+		callCount ++;
+	}
+
+}
+
+/**
+ * @brief Initializes all the variables for the proper functionality of the display
+ */
+void write7SegDisplay(uint8_t c)
+{
+
+	for(int i = 0; i < DISLAY_PIN_NUM; i++)
+	{
+		digitalWrite(displayPins[i], (((c) >> i) & 0x01));
+	}
+
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////
+//                   Global function definitions (SERVICES)                    //
+/////////////////////////////////////////////////////////////////////////////////
+/**
+ * @brief Initializes all the variables for the proper functionality of the display
  */
 void initDisplay(void)
 {
-	brightLevel = MAXBRIGHT;										//The initial brit¿ghtness is the maximum possible
-	brightCount = brightLevel;										//The time count of the futy cilce is equal to the bright level
+	brightLevel = MAXBRIGHT;										//The initial brightness is the maximum possible
+	brightCount = brightLevel;										//The time count of the duty cycle is equal to the bright level
 
-	/*	Inizialization of the pins connected to the display, and i set them as OFF in order to see nothing in the display*/
+	/*	Initialization of the pins connected to the display, and i set them as OFF in order to see nothing in the display*/
 	for(int i=0; i < 7; i++)
 	{
 		pinMode(displayPins[i],OUTPUT);
@@ -111,51 +183,8 @@ void initDisplay(void)
 }
 
 /**
- * @brief Interrupt subroutine called to update the state of the displays.
- * Basically, depending on the pin the mux has active, it will write on the corresponding display of the mentioned pin, what the array @data has stored for given display
+ * @brief Adds the char @c to the array @data to the position "referenced" by (@dataIndex + @dataCursor). Then it will be printed to the corresponding display.
  */
-void displayPISR(void)
-{
-	static uint8_t c;
-	static int newActivePin;
-	newActivePin = getActivePin();
-
-	if((muxActivePin == newActivePin) || (callCount == 0))
-	{
-		if(callCount < brightCount)
-		{
-			callCount ++;
-		}else
-		{	if(callCount == brightCount)
-			{
-				c = 0x00;
-				write7SegDisplay(c);
-				callCount ++;
-			}
-		}
-
-	}else
-	{
-		callCount = 0;
-		muxActivePin = getActivePin();
-		if((muxActivePin >= 0) & (muxActivePin < dataCursor))
-		{
-			//c = numCode[data[dataIndex + muxActivePin]];
-			c = data[dataIndex + muxActivePin];
-		}else
-		{
-			c = 0x00;
-		}
-		write7SegDisplay(c);
-		callCount ++;
-	}
-
-}
-
-
-/*******************************************************************************
- * SERVICES
- ******************************************************************************/
 void dispPutchar(char c)
 {
 	if(dataIndex < DATA_LENGTH - DISPLAY_NUM)
@@ -225,9 +254,10 @@ void dispPutchar(char c)
 			case 't' :
 				data[dataIndex + dataCursor] = DISP_t;
 				break;
-//			case '.' :
-//				data[dataIndex + dataCursor] = ;
-				break;
+/*			case '.' :
+*				data[dataIndex + dataCursor] = ;
+*				break;
+*/
 		}
 		if(dataCursor < DISPLAY_NUM)
 		{
@@ -240,6 +270,9 @@ void dispPutchar(char c)
 
 }
 
+/**
+ * @brief Erases the last char from @data
+ */
 void dispErase(void)
 {
 	if(dataIndex > 0)
@@ -254,6 +287,9 @@ void dispErase(void)
 
 }
 
+/**
+ * @brief Clears all the @data array
+ */
 void dispClear(void)
 {
 	for(int i = 0; i < dataIndex + dataCursor;  i++)
@@ -264,6 +300,9 @@ void dispClear(void)
 	dataCursor = 0;
 }
 
+/**
+ * @brief Clears all the @data array, and adds a certain message to it, In order to eventually display it on the display.
+ */
 void dispMessage(Message msg){
 	dispClear();
 	switch(msg){
@@ -290,12 +329,23 @@ void dispMessage(Message msg){
 			break;
 	}
 }
+
+/**
+ * @brief Does the same as dispMessage, but only adds the message 'Err' and the type of error according to @c
+ *
+ * @param c the type of error to be displayed
+ */
 void dispError(char c)
 {
 	dispMessage(ERR);
 	dispPutchar(c);
 }
 
+/**
+ * @brief Same as displayMsg, but with a certai number @n
+ *
+ * @param n the number to be displayed. In the function it`s executed an 'itoa()' stage, in order to get the string corresponding to the sent number @n
+ */
 void displayNum(int n)
 {
 	char numChars[DISPLAY_NUM + 1];
@@ -310,6 +360,9 @@ void displayNum(int n)
 
 }
 
+/**
+ * @brief Increments the brightLevel of the displays. In the end it will incremente the brightCount so the Displays are turned ON during a longer period of time
+ */
 void brightnessUp(void)
 {
 	//static float intenseFraction;
@@ -322,6 +375,10 @@ void brightnessUp(void)
 
 	}
 }
+
+/**
+ * @brief Same concept as brightUp, but it takes the brightLevel down.
+ */
 void brightnessDown(void)
 {
 	//static float intenseFraction;
@@ -333,20 +390,10 @@ void brightnessDown(void)
 	}
 }
 
+/**
+ * @brief This gets the current brightness level of the displays
+ */
 int getBrightnessLevel(void)
 {
 	return brightLevel;
 }
-/*******************************************************************************
- * ADDITIONAL FUNCTIONS
- ******************************************************************************/
-void write7SegDisplay(uint8_t c)
-{
-
-	for(int i = 0; i < DISLAY_PIN_NUM; i++)
-	{
-		digitalWrite(displayPins[i], (((c) >> i) & 0x01));
-	}
-
-}
-

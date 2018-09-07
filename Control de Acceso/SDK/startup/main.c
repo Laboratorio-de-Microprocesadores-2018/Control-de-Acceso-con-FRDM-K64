@@ -1,8 +1,8 @@
 
 #include "hardware.h"
 
-void App_Init (void);
-void App_Run (void);
+extern void App_Init (void);
+extern void App_Run (void);
 
 
 int main (void)
