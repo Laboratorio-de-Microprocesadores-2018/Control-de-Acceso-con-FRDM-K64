@@ -21,10 +21,10 @@
 #include <stdbool.h>
 
 /** Debounce time (mS). */
-#define DEBOUNCE_TIME 40
+#define DEBOUNCE_TIME 0
 
 /** Time to count multiple clicks (mS). */
-#define MULTI_PRESS_TIME 200
+#define MULTI_PRESS_TIME 100
 
 /** Time to detect a long press (mS). */
 #define LONG_PRESS_TIME 900

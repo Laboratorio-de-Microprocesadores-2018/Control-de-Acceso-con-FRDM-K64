@@ -15,45 +15,42 @@
 #include "Display.h"
 #include "CardReader.h"
 #include "Buzzer.h"
-/** StateMachine function definitions */
-#include "StateMachine.h"
+#include "Assert.h"
 
 /** FW Profile function definitions */
 #include "FwSmConstants.h"
 #include "FwSmDCreate.h"
 #include "FwSmConfig.h"
-//#include "FwSmCore.h"
 #include "FwSmAux.h"
+#include "StateMachine.h"
 #include "StateMachineData.h"
 
+/** Structure to share data of events to state machine*/
 static StateMachineData data;
-static FwSmDesc_t smDesc;
+
+/** State machine */
+static FwSmDesc_t FSM;
 typedef int SmEvent;
 static void processEvent(SmEvent ev);
 
 
 void App_Init (void)
 {
-	/** Define the state machine descriptor (SMD) */
-	smDesc = StateMachineCreate(&data);
+	/** Create the state machine.*/
+	FSM = StateMachineCreate(&data);
 
-	/** Check that the SM is properly configured */
-	FwSmErrCode_t status = FwSmCheckRec(smDesc);
-	if (status != smSuccess)
-		while(1);
+	/** Check that the it is properly configured */
+	FwSmErrCode_t status = FwSmCheckRec(FSM);
+	ASSERT(status == smSuccess);
 
 	/** Start the SM*/
-	FwSmStart(smDesc);
+	FwSmStart(FSM);
 
-	pinMode(PIN_LED_GREEN,OUTPUT);
-	digitalWrite(PIN_LED_GREEN,1);
-	pinMode(PIN_LED_BLUE,OUTPUT);
-	digitalWrite(PIN_LED_BLUE,HIGH);
-
-
-	initKeyboard();
-	initDisplay();
+	/** Drivers initialization */
 	initMultiplexer();
+	initDisplay();
+	initKeyboard();
+
 	sysTickInit();
 	initCardReader();
 	initBuzzer();
@@ -71,6 +68,7 @@ void App_Run (void)
 		{
 			if(('0'<=c)&&(c<='9'))
 			{
+
 				if(data.bufferLen<BUFFER_SIZE)
 				{
 					data.buffer[data.bufferLen] = c;
@@ -97,7 +95,7 @@ void App_Run (void)
 
 		}
 	}
-	if(isDataReady()==_crDataOk)//HAY TARJETA
+	if(isDataReady()==_crDataOk)
 	{
 		data.cardNumber = getCardNumber();
 		data.cardPassed = true;
@@ -105,8 +103,7 @@ void App_Run (void)
 	}
 }
 
-
 void processEvent(SmEvent ev)
 {
-	FwSmMakeTrans(smDesc, ev);
+	FwSmMakeTrans(FSM, ev);
 }

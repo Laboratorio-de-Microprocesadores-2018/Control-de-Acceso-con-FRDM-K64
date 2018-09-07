@@ -32,7 +32,7 @@ void clearScreen(FwSmDesc_t smDesc);
 *
 * @param smDesc the state machine descriptor
 */
-void clrBufferScreen(FwSmDesc_t smDesc);
+void printPassAndClear(FwSmDesc_t smDesc);
 
 
 /**
@@ -95,6 +95,20 @@ FwSmBool_t timeIsUp(FwSmDesc_t smDesc);
 * @return 1 if the guard is fulfilled, otherwise 0.
 */
 FwSmBool_t isAdmin(FwSmDesc_t smDesc);
+
+
+/**
+*
+* @param smDesc the state machine descriptor
+*/
+FwSmBool_t checkLen(FwSmDesc_t smDesc);
+
+/**
+*
+* @param smDesc the state machine descriptor
+*/
+FwSmBool_t checkPassLen(FwSmDesc_t smDesc);
+
 
 /**
 * Entry Action for the state IDLE.

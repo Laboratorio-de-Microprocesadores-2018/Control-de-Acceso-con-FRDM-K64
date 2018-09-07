@@ -11,6 +11,7 @@
 
 /** Start value in seconds of login countown timer. It doubles each time is triggered. */
 #define COUNTDOWN_MAX_ATTEMPTS_START_VALUE 10
+#define MAX_COUNTDOWN_COUNTER 300
 
 /** Time in seconds after the last keyboar input to go from RUNNING to IDLE. */
 #define TIMEOUT_TIME 60
@@ -20,6 +21,9 @@
 
 /** Time in seconds the door remains open. During this time the input is not processed. */
 #define OPEN_DOOR_TIME 5
+
+#define MIN_PASS_LEN 5
+#define MAX_PASS_LEN 6
 
 /** Frequency and period in which the FSM is executed*/
 #define STATE_MACHINE_EXECUTION_FREQUENCY 1
@@ -31,16 +35,6 @@ typedef uint64_t ID;
 /** Paswords are stored as 32 bit integers (up to 9 digits). */
 typedef uint32_t PASSWORD;
 
-/** Structure to store the data of a user*/
-typedef struct {
-	/***********************************
-	Es mejor guardarlo como un arreglo?
-	char number[20];
-	char password[6];
-	***********************************/
-	ID number;
-	PASSWORD password;
-}User;
 
 typedef struct {
 	char buffer[BUFFER_SIZE];/// Buffer to store keyboard input.
