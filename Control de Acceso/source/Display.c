@@ -91,6 +91,7 @@ typedef enum{
 /////////////////////////////////////////////////////////////////////////////////
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 static const int displayPins[] = {PORTNUM2PIN(PC,2),PORTNUM2PIN(PC,0),PORTNUM2PIN(PA,2),PORTNUM2PIN(PC,5), PORTNUM2PIN(PC,3), PORTNUM2PIN(PC,7), PORTNUM2PIN(PB,23)};	// Definition of the pins to be used, in order to write the display
 static const int dotPin = PORTNUM2PIN(PC,9);		// Definition of the "dot" of the 7 segment display pin
 static char data[DATA_LENGTH];		//	Array of codes to be printed in the displays
@@ -102,6 +103,8 @@ static int brightCount;				//	Counter in order to control the duty cycle of the 
 static int callCount;				//	Counter in order to control the duty cycle of the display
 
 =======
+=======
+>>>>>>> edd8d4a3cfafb581cde9e20a9a6db299eae7c489
 /** Array to iterate the pins */
 static const int displayPins[] = {SEG_D,SEG_E,SEG_F,SEG_A,SEG_B,SEG_C,SEG_G,DP};//{PORTNUM2PIN(PC,2),PORTNUM2PIN(PC,0),PORTNUM2PIN(PA,2),PORTNUM2PIN(PC,5), PORTNUM2PIN(PC,3), PORTNUM2PIN(PC,7), PORTNUM2PIN(PB,23)};
 
@@ -148,7 +151,10 @@ static void write7SegDisplay(uint8_t c);
 static void displayPISR(void);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> edd8d4a3cfafb581cde9e20a9a6db299eae7c489
 /*
  *
  */
@@ -193,6 +199,7 @@ void initDisplay(void)
 /**
  * @brief Interrupt subroutine called to update the state of the displays.
 <<<<<<< HEAD
+<<<<<<< HEAD
  * The displays will be ON, one at a time. The one being updated will be defined by the active pin set by the MUX.
  * Then, in @data, it will be stored the array of characters to be written. In order to know which character corresponds
  * to each display, the variables @dataIndex and @dataCursor will be used to reference the correct characters,inside
@@ -202,11 +209,16 @@ void initDisplay(void)
  * Basically, depending on the pin the mux has active, it will write on the corresponding
  * display of the mentioned pin, what the array @data has stored for given display
 >>>>>>> edd8d4a3cfafb581cde9e20a9a6db299eae7c489
+=======
+ * Basically, depending on the pin the mux has active, it will write on the corresponding
+ * display of the mentioned pin, what the array @data has stored for given display
+>>>>>>> edd8d4a3cfafb581cde9e20a9a6db299eae7c489
  */
 void displayPISR(void)
 {
 	static uint8_t c;					/**<	The eventual code @c to be written to the active is display is declared*/
 	static int newActivePin;
+<<<<<<< HEAD
 	newActivePin = getActivePin();		/**<	The value of the active display is updated. As the frequency with which the displayCallback is called is 'k' times greater than the frequency of the muxCallback, the callback will be called 'k' times before this value actually changes*/
 
 <<<<<<< HEAD
@@ -216,6 +228,11 @@ void displayPISR(void)
 	 * If i haven't reached the duty cycle required for the given brightLevel, then i keep the pins as they where written when the activePin changed*/
 	if((muxActivePin == newActivePin) & (callCount != 0))
 =======
+	if((activeDisplay == newActivePin) || (callCount == 0))
+>>>>>>> edd8d4a3cfafb581cde9e20a9a6db299eae7c489
+=======
+	newActivePin = getActivePin();
+
 	if((activeDisplay == newActivePin) || (callCount == 0))
 >>>>>>> edd8d4a3cfafb581cde9e20a9a6db299eae7c489
 	{
@@ -237,10 +254,18 @@ void displayPISR(void)
 		 **/
 		callCount = 0;
 <<<<<<< HEAD
+<<<<<<< HEAD
 		muxActivePin = newActivePin;	/**<	The active pin is updated*/
 		if((muxActivePin >= 0) & (muxActivePin < dataCursor))
 		{
 			c = data[dataIndex + muxActivePin];		/**<	The char code to be written is referenced as it was explained in the @brief*/
+=======
+		activeDisplay = getActivePin();
+		if((activeDisplay >= 0) & (activeDisplay < cursor))
+		{
+			//c = numCode[data[index + activeDisplay]];
+			c = data[index + activeDisplay];
+>>>>>>> edd8d4a3cfafb581cde9e20a9a6db299eae7c489
 =======
 		activeDisplay = getActivePin();
 		if((activeDisplay >= 0) & (activeDisplay < cursor))
@@ -295,9 +320,15 @@ void initDisplay(void)
 
 }
 
+<<<<<<< HEAD
 /**
  * @brief Adds the char @c to the array @data to the position "referenced" by (@dataIndex + @dataCursor). Then it will be printed to the corresponding display.
  */
+=======
+/////////////////////////////////////////////////////////////////////////////////
+//                   		     	Services                  				   //
+/////////////////////////////////////////////////////////////////////////////////
+>>>>>>> edd8d4a3cfafb581cde9e20a9a6db299eae7c489
 =======
 /////////////////////////////////////////////////////////////////////////////////
 //                   		     	Services                  				   //
@@ -371,6 +402,7 @@ void dispPutchar(char c)
 				break;
 			case 't' :
 				data[index + cursor] = DISP_t;
+<<<<<<< HEAD
 				break;
 			case 'b' :
 				data[index + cursor] = DISP_b;
@@ -384,11 +416,23 @@ void dispPutchar(char c)
 			case 'i' :
 				data[index + cursor] = DISP_i;
 				break;
+=======
+				break;
+			case 'b' :
+				data[index + cursor] = DISP_b;
+				break;
+			case 'i' :
+				data[index + cursor] = DISP_i;
+				break;
+>>>>>>> edd8d4a3cfafb581cde9e20a9a6db299eae7c489
 			case '.' :
 				data[index + cursor-1] |= DISP_dot ;
 				break;
 			default:
 				data[index + cursor] = DISP_DASH;
+<<<<<<< HEAD
+>>>>>>> edd8d4a3cfafb581cde9e20a9a6db299eae7c489
+=======
 >>>>>>> edd8d4a3cfafb581cde9e20a9a6db299eae7c489
 		}
 
@@ -434,10 +478,15 @@ void dispClear(void)
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 /**
  * @brief Clears all the @data array, and adds a certain message to it, In order to eventually display it on the display.
  */
 void dispMessage(Message msg){
+=======
+void dispMessage(Message msg)
+{
+>>>>>>> edd8d4a3cfafb581cde9e20a9a6db299eae7c489
 =======
 void dispMessage(Message msg)
 {
@@ -469,12 +518,15 @@ void dispMessage(Message msg)
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 /**
  * @brief Does the same as dispMessage, but only adds the message 'Err' and the type of error according to @c
  *
  * @param c the type of error to be displayed
  */
 =======
+=======
+>>>>>>> edd8d4a3cfafb581cde9e20a9a6db299eae7c489
 void dispString(char * s)
 {
 	ASSERT(s!=NULL);
@@ -483,6 +535,9 @@ void dispString(char * s)
 		dispPutchar((*s++));
 }
 
+<<<<<<< HEAD
+>>>>>>> edd8d4a3cfafb581cde9e20a9a6db299eae7c489
+=======
 >>>>>>> edd8d4a3cfafb581cde9e20a9a6db299eae7c489
 void dispError(char c)
 {
@@ -520,9 +575,12 @@ void brightnessUp(void)
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 /**
  * @brief Same concept as brightUp, but it takes the brightLevel down.
  */
+=======
+>>>>>>> edd8d4a3cfafb581cde9e20a9a6db299eae7c489
 =======
 >>>>>>> edd8d4a3cfafb581cde9e20a9a6db299eae7c489
 void brightnessDown(void)
@@ -544,7 +602,10 @@ int getBrightnessLevel(void)
 	return brightLevel;
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> edd8d4a3cfafb581cde9e20a9a6db299eae7c489
 
 void dispOpenDoor(void)
 {
@@ -576,4 +637,7 @@ static void write7SegDisplay(uint8_t c)
 }
 
 
+<<<<<<< HEAD
+>>>>>>> edd8d4a3cfafb581cde9e20a9a6db299eae7c489
+=======
 >>>>>>> edd8d4a3cfafb581cde9e20a9a6db299eae7c489
