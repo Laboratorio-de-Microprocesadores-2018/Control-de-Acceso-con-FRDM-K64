@@ -19,9 +19,12 @@
 /////////////////////////////////////////////////////////////////////////////////
 //                   Local function prototypes ('static')                      //
 /////////////////////////////////////////////////////////////////////////////////
-static void enableCallback(void);
-static void newBit(void);
-static void dataSignalChanged(void);
+
+static void enableCallback(void);//ISR for enable
+static void newBit(void);//ISR for CLOCK
+static void dataSignalChanged(void);//ISR for DATA
+
+
 static void processWord(uint8_t w);
 static uint8_t checkOddParity(uint8_t w);
 static void processRawData(void);
@@ -41,12 +44,12 @@ typedef enum crState_ENUM {
 } CR_STATE;
 
 static uint8_t buffer[DATA_BUFFER_LENGTH];
-static CR_STATE crState;
+static CR_STATE crState;//parsing state
 static	int8_t shiftCount;
 static	uint8_t word;
-static	uint8_t buffIndex;
+static	uint8_t buffIndex;//index for writing and reading inside the buffer
 static 	uint8_t dataValue;	//Value of the last input bit
-static 	_Bool error;
+static 	_Bool error;//error flag
 
 
 
