@@ -7,30 +7,54 @@
 /////////////////////////////////////////////////////////////////////////////////
 //                             Included header files                           //
 /////////////////////////////////////////////////////////////////////////////////
-#include <stdint.h>			//	For certain variables
-#include <stdlib.h>			//	To convert int to char
-#include "Display.h"		//	This is the header of the file
-#include "Multiplexer.h"	//	This is used for the communication with the mux
-#include "SysTick.h"		//
+#include <stdint.h>
+#include <stdlib.h>
+#include "Display.h"
+#include "Multiplexer.h"
+#include "SysTick.h"
 #include "GPIO.h"
 
 /////////////////////////////////////////////////////////////////////////////////
 //                       Constants and macro definitions                       //
 /////////////////////////////////////////////////////////////////////////////////
-#define DATA_LENGTH					10		//	Maximum number of characters to be displayed
 
-#define DISPLAY_NUM					4		//	Number of displays used in the board (this could be in bord.h)
-#define DISLAY_PIN_NUM				7		//	Number of pins in the 7segment display
+/**  Maximum number of characters to be displayed. */
+#define DATA_LENGTH			20
 
-#define OFF_DISP_PIN				0		//	Define active high/low pins
-#define ON_DISP_PIN					1
+/** Number of displays used in the board. */
+#define DISPLAY_NUM			4
 
+/** Define active high/low pins. */
+#define OFF_DISP_PIN		0
+#define ON_DISP_PIN			1
 
-#define DISP_FREQUENCY				(float)(MUX_FREQUENCY*10)						//	Frequency for the dispPISR callback (It has to be faster than the one of th MUX, in order to change the brightness)
-#define MAXBRIGHT					((float)DISP_FREQUENCY)/((float)MUX_FREQUENCY)	//	Maximum amount of brightness, this will emulate the duty cicle of the timne the display is on
-#define MINBRIGHT					MAXBRIGHT/100									//	Following the line of thought of MAXBRIGHT, this will be the minimum duty cicle of the time the display is on
+/** Percentage step when increasing/decreasing brightness. */
+#define BRIGHTNESS_STEP     5
 
-//	The next enum will have the codes that must be printed to the display pins, in order to display certain character
+/** Number of steps from 0% to 100%. */
+#define NUMBER_OF_STEPS     (100/(float)BRIGHTNESS_STEP)
+
+/**	Frequency for the dispPISR callback (It has to be faster than the one of th MUX, in order to change the brightness) */
+#define DISP_FREQUENCY		(float)(MUX_FREQUENCY * NUMBER_OF_STEPS)
+
+/**	Maximum amount of brightness, this will emulate the duty cicle of the timne the display is on */
+#define MAXBRIGHT			((float)DISP_FREQUENCY)/((float)MUX_FREQUENCY)
+/**	Following the line of thought of MAXBRIGHT, this will be the minimum duty cicle of the time the display is on */
+#define MINBRIGHT			MAXBRIGHT/100
+
+/** Define GPIO pins. */
+enum{
+	SEG_A = PORTNUM2PIN(PC,5),
+	SEG_B = PORTNUM2PIN(PC,3),
+	SEG_C = PORTNUM2PIN(PC,7),
+	SEG_D = PORTNUM2PIN(PC,2),
+	SEG_E = PORTNUM2PIN(PC,0),
+	SEG_F = PORTNUM2PIN(PA,2),
+	SEG_G = PORTNUM2PIN(PB,23),
+	DP    = PORTNUM2PIN(PC,9)
+};
+
+//** Define the binary values for the display pins, in order to display certain character */
 typedef enum{
 	DISP_ZERO 	= 0x3F,
 	DISP_ONE 	= 0x06,
@@ -52,7 +76,8 @@ typedef enum{
 	DISP_d      = 0x5E,
 	DISP_o      = 0x5C,
 	DISP_u      = 0x1C,
-	DISP_t		= 0x78
+	DISP_t		= 0x78,
+	DISP_dot	= 0x80
 }dispCodes;
 
 
@@ -61,16 +86,29 @@ typedef enum{
 //                   Local variable definitions ('static')                     //
 /////////////////////////////////////////////////////////////////////////////////
 
-static const int displayPins[] = {PORTNUM2PIN(PC,2),PORTNUM2PIN(PC,0),PORTNUM2PIN(PA,2),PORTNUM2PIN(PC,5), PORTNUM2PIN(PC,3), PORTNUM2PIN(PC,7), PORTNUM2PIN(PB,23)};	// Definition of the pins to be used, in order to write the display
-static const int dotPin = PORTNUM2PIN(PC,9);		// Definition of the "dot" of the 7 segment display pin
-//static const uint8_t numCode[] = {0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x67};
-static char data[DATA_LENGTH];		//	Array of codes to be printed in the displays
-static int muxActivePin;			//	This will be the number of display is being used, it will be defined by the mux
-static int dataIndex;				//	Last number of the array data, to be displayed
-static int dataCursor;				//	Pointer to the next position to be written in the data array
-static int brightLevel;				//	bright level that emulates the duty cicle of the display
-static int brightCount;				//	Counter in order to control the duty cicle of the display
-static int callCount;				//	Counter in order to control the duty cicle of the display
+/** Array to iterate the pins */
+static const int displayPins[] = {SEG_D,SEG_E,SEG_F,SEG_A,SEG_B,SEG_C,SEG_G,DP};//{PORTNUM2PIN(PC,2),PORTNUM2PIN(PC,0),PORTNUM2PIN(PA,2),PORTNUM2PIN(PC,5), PORTNUM2PIN(PC,3), PORTNUM2PIN(PC,7), PORTNUM2PIN(PB,23)};
+
+/**	Array of codes to be printed in the displays. */
+static char data[DATA_LENGTH];
+
+/**	This will be the number of display is being used, it will be defined by the mux */
+static int activeDisplay;
+
+/**	Last number of the array data, to be displayed. */
+static int index;
+
+/**	Pointer to the next position to be written in the data array. */
+static int cursor;
+
+/**	bright level that emulates the duty cicle of the display. */
+static int brightLevel;
+
+/**	Counter in order to control the duty cicle of the display. */
+static int brightCount;
+
+/**	Counter in order to control the duty cicle of the display. */
+static int callCount;
 //static int pinCall;
 
 
@@ -96,15 +134,26 @@ static void displayPISR(void);
  */
 void initDisplay(void)
 {
-	brightLevel = MAXBRIGHT;										//The initial brit¿ghtness is the maximum possible
-	brightCount = brightLevel;										//The time count of the futy cilce is equal to the bright level
+	brightLevel = MAXBRIGHT;	//The initial brit¿ghtness is the maximum possible
+	brightCount = brightLevel;	//The time count of the futy cilce is equal to the bright level
 
-	/*	Inizialization of the pins connected to the display, and i set them as OFF in order to see nothing in the display*/
+	/*	Inizialization of the pins connected to the display, and i set them as OFF
+	 *  in order to see nothing in the display*/
 	for(int i=0; i < 7; i++)
 	{
 		pinMode(displayPins[i],OUTPUT);
 		digitalWrite(displayPins[i],OFF_DISP_PIN);
 	}
+
+	/** RGB led of kinetis board*/
+	pinMode(PIN_LED_GREEN,OUTPUT);
+	pinMode(PIN_LED_BLUE,OUTPUT);
+	pinMode(PIN_LED_RED,OUTPUT);
+
+	digitalWrite(PIN_LED_GREEN,HIGH);
+	digitalWrite(PIN_LED_BLUE,HIGH);
+	digitalWrite(PIN_LED_RED,HIGH);
+
 	/*	The callback of the display is added to the sysTick callback list*/
 	sysTickAddCallback(&displayPISR,(float)(1/DISP_FREQUENCY));
 
@@ -112,7 +161,8 @@ void initDisplay(void)
 
 /**
  * @brief Interrupt subroutine called to update the state of the displays.
- * Basically, depending on the pin the mux has active, it will write on the corresponding display of the mentioned pin, what the array @data has stored for given display
+ * Basically, depending on the pin the mux has active, it will write on the corresponding
+ * display of the mentioned pin, what the array @data has stored for given display
  */
 void displayPISR(void)
 {
@@ -120,7 +170,7 @@ void displayPISR(void)
 	static int newActivePin;
 	newActivePin = getActivePin();
 
-	if((muxActivePin == newActivePin) || (callCount == 0))
+	if((activeDisplay == newActivePin) || (callCount == 0))
 	{
 		if(callCount < brightCount)
 		{
@@ -137,11 +187,11 @@ void displayPISR(void)
 	}else
 	{
 		callCount = 0;
-		muxActivePin = getActivePin();
-		if((muxActivePin >= 0) & (muxActivePin < dataCursor))
+		activeDisplay = getActivePin();
+		if((activeDisplay >= 0) & (activeDisplay < cursor))
 		{
-			//c = numCode[data[dataIndex + muxActivePin]];
-			c = data[dataIndex + muxActivePin];
+			//c = numCode[data[index + activeDisplay]];
+			c = data[index + activeDisplay];
 		}else
 		{
 			c = 0x00;
@@ -153,88 +203,91 @@ void displayPISR(void)
 }
 
 
-/*******************************************************************************
- * SERVICES
- ******************************************************************************/
+/////////////////////////////////////////////////////////////////////////////////
+//                   		     	Services                  				   //
+/////////////////////////////////////////////////////////////////////////////////
 void dispPutchar(char c)
 {
-	if(dataIndex < DATA_LENGTH - DISPLAY_NUM)
+	if(index < DATA_LENGTH - DISPLAY_NUM)
 	{
 		switch(c)
 		{
 			case '0' :
-				data[dataIndex + dataCursor] = DISP_ZERO;
+				data[index + cursor] = DISP_ZERO;
 				break;
 			case '1' :
-				data[dataIndex + dataCursor] = DISP_ONE;
+				data[index + cursor] = DISP_ONE;
 				break;
 			case '2' :
-				data[dataIndex + dataCursor] = DISP_TWO;
+				data[index + cursor] = DISP_TWO;
 				break;
 			case '3' :
-				data[dataIndex + dataCursor] = DISP_THREE;
+				data[index + cursor] = DISP_THREE;
 				break;
 			case '4' :
-				data[dataIndex + dataCursor] = DISP_FOUR;
+				data[index + cursor] = DISP_FOUR;
 				break;
 			case '5' :
-				data[dataIndex + dataCursor] = DISP_FIVE;
+				data[index + cursor] = DISP_FIVE;
 				break;
 			case '6' :
-				data[dataIndex + dataCursor] = DISP_SIX;
+				data[index + cursor] = DISP_SIX;
 				break;
 			case '7' :
-				data[dataIndex + dataCursor] = DISP_SEVEN;
+				data[index + cursor] = DISP_SEVEN;
 				break;
 			case '8' :
-				data[dataIndex + dataCursor] = DISP_EIGHT;
+				data[index + cursor] = DISP_EIGHT;
 				break;
 			case '9' :
-				data[dataIndex + dataCursor] = DISP_NINE;
+				data[index + cursor] = DISP_NINE;
 				break;
 			case '-' :
-				data[dataIndex + dataCursor] = DISP_DASH;
+				data[index + cursor] = DISP_DASH;
 				break;
 			case 'A' :
-				data[dataIndex + dataCursor] = DISP_A;
+				data[index + cursor] = DISP_A;
 				break;
 			case 'E' :
-				data[dataIndex + dataCursor] = DISP_E;
+				data[index + cursor] = DISP_E;
 				break;
 			case 'L' :
-				data[dataIndex + dataCursor] = DISP_L;
+				data[index + cursor] = DISP_L;
 				break;
 			case 'P' :
-				data[dataIndex + dataCursor] = DISP_P;
+				data[index + cursor] = DISP_P;
 				break;
 			case 'n' :
-				data[dataIndex + dataCursor] = DISP_n;
+				data[index + cursor] = DISP_n;
 				break;
 			case 'r' :
-				data[dataIndex + dataCursor] = DISP_r;
+				data[index + cursor] = DISP_r;
 				break;
 			case 'd' :
-				data[dataIndex + dataCursor] = DISP_d;
+				data[index + cursor] = DISP_d;
 				break;
 			case 'o' :
-				data[dataIndex + dataCursor] = DISP_o;
+				data[index + cursor] = DISP_o;
 				break;
 			case 'u' :
-				data[dataIndex + dataCursor] = DISP_u;
+				data[index + cursor] = DISP_u;
 				break;
 			case 't' :
-				data[dataIndex + dataCursor] = DISP_t;
+				data[index + cursor] = DISP_t;
 				break;
-//			case '.' :
-//				data[dataIndex + dataCursor] = ;
+			case '.' :
+				data[index + cursor] |= DISP_dot ;
 				break;
+			default:
+				data[index + cursor] = DISP_DASH;
 		}
-		if(dataCursor < DISPLAY_NUM)
+
+		if(c!='.')
 		{
-			dataCursor ++;
-		}else
-		{
-			dataIndex ++;
+			if(cursor < DISPLAY_NUM)
+				cursor ++;
+			else
+				index ++;
 		}
 	}
 
@@ -242,29 +295,30 @@ void dispPutchar(char c)
 
 void dispErase(void)
 {
-	if(dataIndex > 0)
-	{
-		dataIndex --;
-		data[dataIndex + dataCursor] = 0x00;
-	}else if(dataCursor > 0 )
-	{
-		dataCursor --;
-		data[dataCursor] = 0x00;
-	}
+	/// If in the current position there is a dot, remove it.
+	/// Else remove the hole character.
+	if((data[index + cursor]>>8) & 0x01)
+		data[index + cursor] &= ~DISP_dot;
+	else
+		data[index + cursor] = 0x00;
 
+	/// And update the index
+	if(index > 0)
+		index --;
+	else if(cursor > 0 )
+		cursor --;
 }
 
 void dispClear(void)
 {
-	for(int i = 0; i < dataIndex + dataCursor;  i++)
-	{
+	for(int i = 0; i < index + cursor;  i++)
 		data[i] = 0;
-	}
-	dataIndex = 0;
-	dataCursor = 0;
+	index = 0;
+	cursor = 0;
 }
 
-void dispMessage(Message msg){
+void dispMessage(Message msg)
+{
 	dispClear();
 	switch(msg){
 		case PASS:
@@ -290,6 +344,13 @@ void dispMessage(Message msg){
 			break;
 	}
 }
+
+void dispString(char * s)
+{
+	while((*s)!='\0')
+		putchar((*s++));
+}
+
 void dispError(char c)
 {
 	dispMessage(ERR);
@@ -300,14 +361,9 @@ void displayNum(int n)
 {
 	char numChars[DISPLAY_NUM + 1];
 	itoa(n,numChars,10);
-
 	dispClear();
-
 	for(int i = 0; numChars[i] != 0x00; i++)
-	{
 		dispPutchar(numChars[i]);
-	}
-
 }
 
 void brightnessUp(void)
@@ -316,7 +372,6 @@ void brightnessUp(void)
 	if(brightLevel+STEP <= MAXBRIGHT)
 	{
 		brightLevel += STEP;
-
 		//intenseFraction = ((float) IO)^(((brightLevel)/((float) MAXBRIGHT))-1);
 		brightCount = brightLevel;
 
@@ -337,16 +392,10 @@ int getBrightnessLevel(void)
 {
 	return brightLevel;
 }
-/*******************************************************************************
- * ADDITIONAL FUNCTIONS
- ******************************************************************************/
-void write7SegDisplay(uint8_t c)
+
+static void write7SegDisplay(uint8_t c)
 {
-
-	for(int i = 0; i < DISLAY_PIN_NUM; i++)
-	{
+	for(int i = 0; i < 8; i++)
 		digitalWrite(displayPins[i], (((c) >> i) & 0x01));
-	}
-
 }
 
