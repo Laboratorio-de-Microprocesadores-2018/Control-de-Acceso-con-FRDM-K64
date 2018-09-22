@@ -183,6 +183,7 @@ uint8_t pinConfigureIRQ (uint8_t pin, uint8_t irqMode, pinIrqFun_t irqFun)
 		switch(irqMode)
 		{
 			case IRQC_DISABLE:
+				/* Aca no deberia ser un &= ?*/
 				ports[port]->PCR[pos] |= PORT_PCR_IRQC(IRQC_DISABLE);//Sets IRQC for disable mode
 
 				//Searches for the index in the buffer and deletes it
@@ -235,6 +236,8 @@ uint8_t pinConfigureIRQ (uint8_t pin, uint8_t irqMode, pinIrqFun_t irqFun)
  * */
 void PORTA_IRQHandler(void)
 {
+
+	/* Aca deberia entrar si o si no? porque si esta el NVIC_EnableIRQ activado significa que algun pin tiene que haber o no?*/
 	if(buffA.size!=0)//if there is any pin enabled for interrupts
 	{
 		uint8_t pin=0;
@@ -244,6 +247,7 @@ void PORTA_IRQHandler(void)
 			if( (ports[PA]->PCR[pin]&PORT_PCR_ISF_MASK) == PORT_PCR_ISF_MASK)//checks every pins' ISF
 			{
 				portAIRQs[pin]();//callback
+				/* Aca devuelta no deberia ser &= ?*/
 				ports[PA]->PCR[pin] |= PORT_PCR_ISF(1);//Sets to 0 the interrupt status flag
 			}
 		}
